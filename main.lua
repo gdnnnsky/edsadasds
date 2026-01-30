@@ -1,10 +1,22 @@
---// Dj Hub (SAFE untuk game kamu sendiri): Draggable GUI + Minimize + Close + ESP Toggle (Celestial/Common)
+--// Dj Hub (SAFE untuk game kamu sendiri): Draggable GUI + Minimize + Close + ESP Toggle (Celestial/Common) + No Tsu Toggle
 --// LocalScript di StarterPlayerScripts / StarterGui
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local lp = Players.LocalPlayer
+
+--========================
+-- RemoteEvent (client <-> server)
+--========================
+local REMOTE_NAME = "DjHub_NoTsu"
+local NoTsuRemote = ReplicatedStorage:FindFirstChild(REMOTE_NAME)
+if not NoTsuRemote then
+	NoTsuRemote = Instance.new("RemoteEvent")
+	NoTsuRemote.Name = REMOTE_NAME
+	NoTsuRemote.Parent = ReplicatedStorage
+end
 
 --========================
 -- GUI Parent (robust)
@@ -116,7 +128,7 @@ local Info = Instance.new("TextLabel")
 Info.Size = UDim2.new(1, -24, 0, 40)
 Info.Position = UDim2.new(0, 12, 0, 12)
 Info.BackgroundTransparency = 1
-Info.Text = "Toggle ESP: Celestial / Common"
+Info.Text = "ESP: Celestial/Common + No Tsu"
 Info.TextSize = 14
 Info.Font = Enum.Font.Gotham
 Info.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -146,6 +158,19 @@ EspCommonBtn.Font = Enum.Font.GothamSemibold
 EspCommonBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 EspCommonBtn.Parent = Content
 Instance.new("UICorner", EspCommonBtn).CornerRadius = UDim.new(0, 8)
+
+-- Tombol No Tsu
+local NoTsuBtn = Instance.new("TextButton")
+NoTsuBtn.Size = UDim2.new(0, 180, 0, 34)
+NoTsuBtn.Position = UDim2.new(0, 210, 0, 60)
+NoTsuBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+NoTsuBtn.BorderSizePixel = 0
+NoTsuBtn.Text = "No Tsu: OFF"
+NoTsuBtn.TextSize = 14
+NoTsuBtn.Font = Enum.Font.GothamSemibold
+NoTsuBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NoTsuBtn.Parent = Content
+Instance.new("UICorner", NoTsuBtn).CornerRadius = UDim.new(0, 8)
 
 --========================
 -- Drag logic
@@ -209,23 +234,18 @@ local ESP = {
 	markers = {} -- [RenderedBrainrotModel] = {hl=..., bb=..., ac=...}
 }
 
--- Ambil nama brainrot dari Model anak di dalam RenderedBrainrot
 local function getBrainrotName(rendered)
-	-- cari child yang tipe Model, dan bukan container generic kalau ada
 	for _, ch in ipairs(rendered:GetChildren()) do
 		if ch:IsA("Model") then
 			return ch.Name
 		end
 	end
-	-- fallback: kalau gak nemu model, pake nama container
 	return rendered.Name
 end
 
--- Ambil part untuk nempel Billboard (prioritas Root)
 local function getRootPart(rendered)
 	local root = rendered:FindFirstChild("Root")
 	if root and root:IsA("BasePart") then return root end
-	-- fallback: part pertama di dalam
 	return rendered:FindFirstChildWhichIsA("BasePart", true)
 end
 
@@ -239,7 +259,6 @@ local function removeMarker(rendered)
 end
 
 local function addMarker(rendered, labelPrefix)
-	-- kita cuma ESP untuk container RenderedBrainrot
 	if not rendered or not rendered:IsA("Model") then return end
 	if rendered.Name ~= "RenderedBrainrot" then return end
 	if ESP.markers[rendered] then return end
@@ -249,14 +268,12 @@ local function addMarker(rendered, labelPrefix)
 
 	local brainrotName = getBrainrotName(rendered)
 
-	-- Highlight
 	local hl = Instance.new("Highlight")
 	hl.Name = "DjESP_HL"
 	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	hl.Adornee = rendered
 	hl.Parent = rendered
 
-	-- Billboard
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DjESP_BB"
 	bb.Adornee = rootPart
@@ -275,7 +292,6 @@ local function addMarker(rendered, labelPrefix)
 	txt.Text = ("%s: %s"):format(labelPrefix, brainrotName)
 	txt.Parent = bb
 
-	-- auto cleanup kalau object dihapus
 	local ac = rendered.AncestryChanged:Connect(function(_, parentNow)
 		if not parentNow then
 			removeMarker(rendered)
@@ -324,16 +340,12 @@ local function setEsp(modeName, folderName, labelPrefix, isOn)
 		return
 	end
 
-	-- ON: scan existing + listen spawn baru
 	scanFolder(folder, labelPrefix)
 	ESP.connections[modeName] = folder.ChildAdded:Connect(function(child)
 		addMarker(child, labelPrefix)
 	end)
 end
 
---========================
--- Button hooks
---========================
 EspCelestialBtn.MouseButton1Click:Connect(function()
 	local newState = not ESP.enabled.Celestial
 	setEsp("Celestial", "Celestial", "Celestial", newState)
@@ -346,6 +358,20 @@ EspCommonBtn.MouseButton1Click:Connect(function()
 	setEsp("Common", "Common", "Common", newState)
 	EspCommonBtn.Text = "ESP Common: " .. (newState and "ON" or "OFF")
 	EspCommonBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+end)
+
+--========================
+-- No Tsu toggle (client -> server)
+--========================
+local noTsuEnabled = false
+
+NoTsuBtn.MouseButton1Click:Connect(function()
+	noTsuEnabled = not noTsuEnabled
+	NoTsuBtn.Text = "No Tsu: " .. (noTsuEnabled and "ON" or "OFF")
+	NoTsuBtn.BackgroundColor3 = noTsuEnabled and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+
+	-- kirim status ke server
+	NoTsuRemote:FireServer(noTsuEnabled)
 end)
 
 --========================
@@ -364,6 +390,13 @@ local function cleanupAll()
 end
 
 Close.MouseButton1Click:Connect(function()
+	-- matikan no tsu saat close (opsional)
+	pcall(function()
+		if noTsuEnabled then
+			NoTsuRemote:FireServer(false)
+		end
+	end)
+
 	cleanupAll()
 	ScreenGui:Destroy()
 end)
