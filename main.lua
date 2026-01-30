@@ -202,4 +202,3 @@ Close.MouseButton1Click:Connect(function()
 end)
 
 print("✅ GUI spawned. Parent:", parent:GetFullName())
-
