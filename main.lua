@@ -1,143 +1,208 @@
--- [[ RE-OPTIMIZED BRAINROT HUB ]] --
-local player = game:GetService("Players").LocalPlayer
-local sg = Instance.new("ScreenGui")
+--// Simple Draggable GUI + Minimize + Close
+--// Taruh di LocalScript / main.lua
 
--- Cek apakah GUI sudah ada, kalau ada hapus dulu biar gak double
-if game:GetService("CoreGui"):FindFirstChild("BrainrotHub") then
-    game:GetService("CoreGui").BrainrotHub:Destroy()
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local lp = Players.LocalPlayer
+
+-- Parent yang aman (kalau PlayerGui belum siap, fallback ke CoreGui)
+local function getParentGui()
+	local pg = lp:FindFirstChildOfClass("PlayerGui")
+	if pg then return pg end
+	return game:GetService("CoreGui")
 end
 
-sg.Name = "BrainrotHub"
-sg.Parent = game:GetService("CoreGui")
-sg.IgnoreGuiInset = true -- Supaya posisi bener-bener akurat
+-- Hapus GUI lama kalau ada (biar ga dobel)
+pcall(function()
+	local old = getParentGui():FindFirstChild("DjWindowGUI")
+	if old then old:Destroy() end
+end)
 
-local Main = Instance.new("Frame")
-Main.Name = "Main"
-Main.Parent = sg
-Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-Main.BorderSizePixel = 0
-Main.Position = UDim2.new(0.5, -100, 0.5, -125)
-Main.Size = UDim2.new(0, 220, 0, 300)
-Main.Active = true
-Main.Draggable = true -- Standard Draggable
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DjWindowGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = getParentGui()
 
--- Header / Title
-local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 35)
-Header.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-Header.Parent = Main
+-- Window utama
+local Window = Instance.new("Frame")
+Window.Name = "Window"
+Window.Size = UDim2.new(0, 420, 0, 260)
+Window.Position = UDim2.new(0.5, -210, 0.5, -130)
+Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Window.BorderSizePixel = 0
+Window.Parent = ScreenGui
 
+-- Biar agak rounded (kalau executor/support UIStroke/UICorner aman)
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Window
+
+-- Topbar untuk drag + tombol
+local Topbar = Instance.new("Frame")
+Topbar.Name = "Topbar"
+Topbar.Size = UDim2.new(1, 0, 0, 38)
+Topbar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Topbar.BorderSizePixel = 0
+Topbar.Parent = Window
+
+local TopbarCorner = Instance.new("UICorner")
+TopbarCorner.CornerRadius = UDim.new(0, 10)
+TopbarCorner.Parent = Topbar
+
+-- Biar corner topbar tidak bikin bawahnya ikut round aneh
+local TopbarCover = Instance.new("Frame")
+TopbarCover.Size = UDim2.new(1, 0, 0, 10)
+TopbarCover.Position = UDim2.new(0, 0, 1, -10)
+TopbarCover.BackgroundColor3 = Topbar.BackgroundColor3
+TopbarCover.BorderSizePixel = 0
+TopbarCover.Parent = Topbar
+
+-- Judul
 local Title = Instance.new("TextLabel")
-Title.Parent = Header
-Title.Size = UDim2.new(0.7, 0, 1, 0)
-Title.Text = "BRAINROT V2"
-Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -120, 1, 0)
+Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Font = Enum.Font.SourceSansBold
-Title.TextSize = 18
+Title.Text = "Dj Hub"
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamSemibold
+Title.TextColor3 = Color3.fromRGB(235, 235, 235)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Topbar
 
--- Minimize Button
-local MinBtn = Instance.new("TextButton")
-MinBtn.Parent = Header
-MinBtn.Position = UDim2.new(0.7, 0, 0, 0)
-MinBtn.Size = UDim2.new(0, 30, 1, 0)
-MinBtn.Text = "-"
-MinBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-MinBtn.TextColor3 = Color3.new(1, 1, 1)
+-- Tombol Close
+local Close = Instance.new("TextButton")
+Close.Name = "Close"
+Close.Size = UDim2.new(0, 38, 0, 26)
+Close.Position = UDim2.new(1, -44, 0, 6)
+Close.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+Close.BorderSizePixel = 0
+Close.Text = "X"
+Close.TextSize = 14
+Close.Font = Enum.Font.GothamBold
+Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+Close.Parent = Topbar
 
--- Close Button
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = Header
-CloseBtn.Position = UDim2.new(0.85, 0, 0, 0)
-CloseBtn.Size = UDim2.new(0, 33, 1, 0)
-CloseBtn.Text = "X"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = Close
 
--- Content Scroll
-local Scroll = Instance.new("ScrollingFrame")
-Scroll.Parent = Main
-Scroll.Position = UDim2.new(0, 0, 0, 35)
-Scroll.Size = UDim2.new(1, 0, 1, -35)
-Scroll.BackgroundTransparency = 1
-Scroll.CanvasSize = UDim2.new(0, 0, 2, 0) -- Muat banyak tombol
+-- Tombol Minimize
+local Minimize = Instance.new("TextButton")
+Minimize.Name = "Minimize"
+Minimize.Size = UDim2.new(0, 38, 0, 26)
+Minimize.Position = UDim2.new(1, -88, 0, 6)
+Minimize.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+Minimize.BorderSizePixel = 0
+Minimize.Text = "-"
+Minimize.TextSize = 18
+Minimize.Font = Enum.Font.GothamBold
+Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+Minimize.Parent = Topbar
 
-local Layout = Instance.new("UIListLayout")
-Layout.Parent = Scroll
-Layout.Padding = UDim.new(0, 5)
-Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local MiniCorner = Instance.new("UICorner")
+MiniCorner.CornerRadius = UDim.new(0, 8)
+MiniCorner.Parent = Minimize
 
--- Helper Function Create Button
-local function AddBtn(txt, func)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0.9, 0, 0, 35)
-    b.Text = txt
-    b.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    b.TextColor3 = Color3.new(1,1,1)
-    b.Parent = Scroll
-    b.MouseButton1Click:Connect(func)
-    return b
+-- Container isi (yang bakal di-hide saat minimize)
+local Content = Instance.new("Frame")
+Content.Name = "Content"
+Content.Size = UDim2.new(1, 0, 1, -38)
+Content.Position = UDim2.new(0, 0, 0, 38)
+Content.BackgroundTransparency = 1
+Content.Parent = Window
+
+-- Contoh isi: label + tombol dummy
+local Info = Instance.new("TextLabel")
+Info.Size = UDim2.new(1, -24, 0, 40)
+Info.Position = UDim2.new(0, 12, 0, 12)
+Info.BackgroundTransparency = 1
+Info.Text = "Isi menu kamu taruh di sini."
+Info.TextSize = 14
+Info.Font = Enum.Font.Gotham
+Info.TextColor3 = Color3.fromRGB(200, 200, 200)
+Info.TextXAlignment = Enum.TextXAlignment.Left
+Info.Parent = Content
+
+local Dummy = Instance.new("TextButton")
+Dummy.Size = UDim2.new(0, 160, 0, 34)
+Dummy.Position = UDim2.new(0, 12, 0, 60)
+Dummy.BackgroundColor3 = Color3.fromRGB(50, 120, 200)
+Dummy.BorderSizePixel = 0
+Dummy.Text = "Button Contoh"
+Dummy.TextSize = 14
+Dummy.Font = Enum.Font.GothamSemibold
+Dummy.TextColor3 = Color3.fromRGB(255, 255, 255)
+Dummy.Parent = Content
+
+local DummyCorner = Instance.new("UICorner")
+DummyCorner.CornerRadius = UDim.new(0, 8)
+DummyCorner.Parent = Dummy
+
+--// Drag logic (Topbar)
+local dragging = false
+local dragStart
+local startPos
+
+local function updateDrag(input)
+	local delta = input.Position - dragStart
+	Window.Position = UDim2.new(
+		startPos.X.Scale, startPos.X.Offset + delta.X,
+		startPos.Y.Scale, startPos.Y.Offset + delta.Y
+	)
 end
 
---- [[ FITUR LOGIC ]] ---
+Topbar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1
+		or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Window.Position
 
--- 1. Close & Min Logic
-CloseBtn.MouseButton1Click:Connect(function() sg:Destroy() end)
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Topbar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement
+		or input.UserInputType == Enum.UserInputType.Touch then
+		if dragging then
+			updateDrag(input)
+		end
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		updateDrag(input)
+	end
+end)
+
+--// Minimize & Close
 local minimized = false
-MinBtn.MouseButton1Click:Connect(function()
-    minimized = not minimized
-    Scroll.Visible = not minimized
-    Main.Size = minimized and UDim2.new(0, 220, 0, 35) or UDim2.new(0, 220, 0, 300)
+local normalSize = Window.Size
+local minimizedSize = UDim2.new(0, 420, 0, 38)
+
+Minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		Content.Visible = false
+		Window.Size = minimizedSize
+		Minimize.Text = "+"
+	else
+		Content.Visible = true
+		Window.Size = normalSize
+		Minimize.Text = "-"
+	end
 end)
 
--- 2. Brainrot Notifier & ESP (Placeholder Logic)
-AddBtn("ESP & Notifier", function()
-    print("Mencari Brainrot Items...")
-    -- Logic: Cari part di workspace yang namanya mengandung 'Brainrot'
-    -- Gunakan BillboardGui untuk ESP
-    game.StarterGui:SetCore("SendNotification", {
-        Title = "Brainrot Found!";
-        Text = "Item spawned nearby!";
-        Duration = 5;
-    })
+Close.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
 end)
 
--- 3. Teleport Zones (Contoh: Common ke Celestial)
-AddBtn("TP to Celestial Zone", function()
-    -- Ganti "CelestialPart" dengan nama part yang kamu temukan di Explorer
-    local target = workspace:FindFirstChild("CelestialZone", true) 
-    if target then
-        player.Character.HumanoidRootPart.CFrame = target.CFrame + Vector3.new(0,3,0)
-    end
-end)
-
--- 4. Noclip (Looping)
-local noclip = false
-AddBtn("Noclip: OFF", function(self)
-    noclip = not noclip
-    script.Parent.Text = "Noclip: " .. (noclip and "ON" or "OFF")
-    game:GetService("RunService").Stepped:Connect(function()
-        if noclip then
-            for _, v in pairs(player.Character:GetDescendants()) do
-                if v:IsA("BasePart") then v.CanCollide = false end
-            end
-        end
-    end)
-end)
-
--- 5. God Mode (Anti-Tsunami)
-AddBtn("God Mode", function()
-    -- Tsunami biasanya kill lewat .Touched. Kita hapus koneksi sentuhan.
-    local char = player.Character
-    char.HumanoidRootPart:ClearAllChildren() -- Menghapus TouchInterest jika ada
-    print("God Mode Active (May not work in all games)")
-end)
-
--- 6. Instant Take
-AddBtn("Instant Take", function()
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("ProximityPrompt") then
-            fireproximityprompt(v)
-        end
-    end
-end)
+print("GUI Loaded ✅")
