@@ -1,5 +1,5 @@
 --// Dj Hub (SAFE untuk game kamu sendiri): Draggable GUI + Minimize + Close + ESP Toggle (Celestial/Common)
---// Letakkan sebagai LocalScript di StarterPlayerScripts / StarterGui
+--// LocalScript di StarterPlayerScripts / StarterGui
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -10,12 +10,10 @@ local lp = Players.LocalPlayer
 -- GUI Parent (robust)
 --========================
 local function pickGuiParent()
-	-- Studio biasanya aman PlayerGui
 	if lp then
 		local pg = lp:FindFirstChildOfClass("PlayerGui")
 		if pg then return pg end
 	end
-	-- fallback
 	local ok, core = pcall(function() return game:GetService("CoreGui") end)
 	if ok and core then return core end
 	return nil
@@ -27,7 +25,6 @@ if not parent then
 	return
 end
 
--- bersihin GUI lama biar ga dobel
 pcall(function()
 	local old = parent:FindFirstChild("DjWindowGUI")
 	if old then old:Destroy() end
@@ -126,7 +123,6 @@ Info.TextColor3 = Color3.fromRGB(200, 200, 200)
 Info.TextXAlignment = Enum.TextXAlignment.Left
 Info.Parent = Content
 
--- Tombol ESP Celestial
 local EspCelestialBtn = Instance.new("TextButton")
 EspCelestialBtn.Size = UDim2.new(0, 180, 0, 34)
 EspCelestialBtn.Position = UDim2.new(0, 12, 0, 60)
@@ -139,7 +135,6 @@ EspCelestialBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 EspCelestialBtn.Parent = Content
 Instance.new("UICorner", EspCelestialBtn).CornerRadius = UDim.new(0, 8)
 
--- Tombol ESP Common
 local EspCommonBtn = Instance.new("TextButton")
 EspCommonBtn.Size = UDim2.new(0, 180, 0, 34)
 EspCommonBtn.Position = UDim2.new(0, 12, 0, 104)
@@ -206,48 +201,69 @@ Minimize.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- ESP Engine
+-- ESP Engine (fixed naming)
 --========================
 local ESP = {
 	enabled = { Celestial = false, Common = false },
 	connections = { Celestial = nil, Common = nil },
-	markers = {} -- [Instance] = {hl=..., bb=..., ac=...}
+	markers = {} -- [RenderedBrainrotModel] = {hl=..., bb=..., ac=...}
 }
 
-local function getAdornee(inst)
-	if not inst then return nil end
-	if inst:IsA("BasePart") then return inst end
-	return inst:FindFirstChildWhichIsA("BasePart", true)
+-- Ambil nama brainrot dari Model anak di dalam RenderedBrainrot
+local function getBrainrotName(rendered)
+	-- cari child yang tipe Model, dan bukan container generic kalau ada
+	for _, ch in ipairs(rendered:GetChildren()) do
+		if ch:IsA("Model") then
+			return ch.Name
+		end
+	end
+	-- fallback: kalau gak nemu model, pake nama container
+	return rendered.Name
 end
 
-local function removeMarker(inst)
-	local pack = ESP.markers[inst]
+-- Ambil part untuk nempel Billboard (prioritas Root)
+local function getRootPart(rendered)
+	local root = rendered:FindFirstChild("Root")
+	if root and root:IsA("BasePart") then return root end
+	-- fallback: part pertama di dalam
+	return rendered:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function removeMarker(rendered)
+	local pack = ESP.markers[rendered]
 	if not pack then return end
 	pcall(function() pack.hl:Destroy() end)
 	pcall(function() pack.bb:Destroy() end)
 	if pack.ac then pcall(function() pack.ac:Disconnect() end) end
-	ESP.markers[inst] = nil
+	ESP.markers[rendered] = nil
 end
 
-local function addMarker(inst, labelPrefix)
-	if not inst or ESP.markers[inst] then return end
+local function addMarker(rendered, labelPrefix)
+	-- kita cuma ESP untuk container RenderedBrainrot
+	if not rendered or not rendered:IsA("Model") then return end
+	if rendered.Name ~= "RenderedBrainrot" then return end
+	if ESP.markers[rendered] then return end
 
-	local adorneePart = getAdornee(inst)
-	if not adorneePart then return end
+	local rootPart = getRootPart(rendered)
+	if not rootPart then return end
 
+	local brainrotName = getBrainrotName(rendered)
+
+	-- Highlight
 	local hl = Instance.new("Highlight")
 	hl.Name = "DjESP_HL"
 	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	hl.Adornee = inst:IsA("Model") and inst or adorneePart
-	hl.Parent = inst
+	hl.Adornee = rendered
+	hl.Parent = rendered
 
+	-- Billboard
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DjESP_BB"
-	bb.Adornee = adorneePart
-	bb.Size = UDim2.new(0, 220, 0, 34)
-	bb.StudsOffset = Vector3.new(0, 2.5, 0)
+	bb.Adornee = rootPart
+	bb.Size = UDim2.new(0, 260, 0, 34)
+	bb.StudsOffset = Vector3.new(0, 2.8, 0)
 	bb.AlwaysOnTop = true
-	bb.Parent = inst
+	bb.Parent = rendered
 
 	local txt = Instance.new("TextLabel")
 	txt.BackgroundTransparency = 1
@@ -256,22 +272,23 @@ local function addMarker(inst, labelPrefix)
 	txt.TextSize = 14
 	txt.TextColor3 = Color3.fromRGB(255, 255, 255)
 	txt.TextStrokeTransparency = 0.6
-	txt.Text = ("%s: %s"):format(labelPrefix, inst.Name)
+	txt.Text = ("%s: %s"):format(labelPrefix, brainrotName)
 	txt.Parent = bb
 
-	local ac = inst.AncestryChanged:Connect(function(_, parentNow)
+	-- auto cleanup kalau object dihapus
+	local ac = rendered.AncestryChanged:Connect(function(_, parentNow)
 		if not parentNow then
-			removeMarker(inst)
+			removeMarker(rendered)
 		end
 	end)
 
-	ESP.markers[inst] = { hl = hl, bb = bb, ac = ac }
+	ESP.markers[rendered] = { hl = hl, bb = bb, ac = ac }
 end
 
-local function getFolder(pathName)
+local function getFolder(folderName)
 	local root = workspace:FindFirstChild("ActiveBrainrots")
 	if not root then return nil end
-	return root:FindFirstChild(pathName)
+	return root:FindFirstChild(folderName)
 end
 
 local function scanFolder(folder, labelPrefix)
@@ -281,9 +298,9 @@ local function scanFolder(folder, labelPrefix)
 end
 
 local function removeMarkersInFolder(folder)
-	for inst, _ in pairs(ESP.markers) do
-		if inst and inst:IsDescendantOf(folder) then
-			removeMarker(inst)
+	for rendered, _ in pairs(ESP.markers) do
+		if rendered and rendered:IsDescendantOf(folder) then
+			removeMarker(rendered)
 		end
 	end
 end
@@ -291,7 +308,6 @@ end
 local function setEsp(modeName, folderName, labelPrefix, isOn)
 	ESP.enabled[modeName] = isOn
 
-	-- disconnect lama
 	if ESP.connections[modeName] then
 		ESP.connections[modeName]:Disconnect()
 		ESP.connections[modeName] = nil
@@ -342,8 +358,8 @@ local function cleanupAll()
 	ESP.connections.Celestial = nil
 	ESP.connections.Common = nil
 
-	for inst, _ in pairs(ESP.markers) do
-		removeMarker(inst)
+	for rendered, _ in pairs(ESP.markers) do
+		removeMarker(rendered)
 	end
 end
 
