@@ -352,14 +352,14 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 	end
 
 	-- Cari Model "Wallses" di workspace
-	local wallModel = workspace:FindFirstChild("Wallses")
+	local wallModel = workspace:FindFirstChild("VIPWalls")
 	
 	if wallModel then
 		local count = 0
 		-- Loop semua anak di dalam Wallses
 		for _, child in ipairs(wallModel:GetChildren()) do
 			-- Cek nama part
-			if child.Name == "block" or child.Name == "block_yes" then
+			if child.Name == "VIP" or child.Name == "VIP_PLUS" then
 				child:Destroy() -- Hapus part
 				count = count + 1
 			end
