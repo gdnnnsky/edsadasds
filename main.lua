@@ -1,38 +1,29 @@
---// Draggable GUI + Minimize + Close (Robust / Anti Gagal)
+--// Dj Hub (SAFE untuk game kamu sendiri): Draggable GUI + Minimize + Close + ESP Toggle (Celestial/Common)
+--// Letakkan sebagai LocalScript di StarterPlayerScripts / StarterGui
+
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 
 local lp = Players.LocalPlayer
 
--- pilih parent GUI paling aman utk executor
+--========================
+-- GUI Parent (robust)
+--========================
 local function pickGuiParent()
-	-- beberapa executor punya gethui()
-	if typeof(gethui) == "function" then
-		local ok, hui = pcall(gethui)
-		if ok and hui then return hui end
-	end
-
-	-- Synapse-style (kalau ada)
-	if typeof(syn) == "table" and typeof(syn.protect_gui) == "function" then
-		-- nanti kita protect setelah parent
-	end
-
-	-- fallback umum
-	local ok, core = pcall(function() return game:GetService("CoreGui") end)
-	if ok and core then return core end
-
-	-- fallback terakhir
+	-- Studio biasanya aman PlayerGui
 	if lp then
 		local pg = lp:FindFirstChildOfClass("PlayerGui")
 		if pg then return pg end
 	end
-
+	-- fallback
+	local ok, core = pcall(function() return game:GetService("CoreGui") end)
+	if ok and core then return core end
 	return nil
 end
 
 local parent = pickGuiParent()
 if not parent then
-	warn("❌ Gagal dapat parent GUI (gethui/CoreGui/PlayerGui).")
+	warn("❌ Gagal dapat parent GUI (PlayerGui/CoreGui).")
 	return
 end
 
@@ -42,6 +33,9 @@ pcall(function()
 	if old then old:Destroy() end
 end)
 
+--========================
+-- Build GUI
+--========================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DjWindowGUI"
 ScreenGui.ResetOnSpawn = false
@@ -49,14 +43,6 @@ ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = parent
 
--- protect kalau executor mendukung (optional)
-pcall(function()
-	if typeof(syn) == "table" and typeof(syn.protect_gui) == "function" then
-		syn.protect_gui(ScreenGui)
-	end
-end)
-
--- Window utama
 local Window = Instance.new("Frame")
 Window.Name = "Window"
 Window.Size = UDim2.new(0, 420, 0, 260)
@@ -70,7 +56,6 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Window
 
--- Topbar (drag)
 local Topbar = Instance.new("Frame")
 Topbar.Name = "Topbar"
 Topbar.Size = UDim2.new(1, 0, 0, 38)
@@ -82,7 +67,6 @@ local TopbarCorner = Instance.new("UICorner")
 TopbarCorner.CornerRadius = UDim.new(0, 10)
 TopbarCorner.Parent = Topbar
 
--- cover supaya bawah topbar tetap kotak
 local TopbarCover = Instance.new("Frame")
 TopbarCover.Size = UDim2.new(1, 0, 0, 10)
 TopbarCover.Position = UDim2.new(0, 0, 1, -10)
@@ -111,10 +95,7 @@ Close.TextSize = 14
 Close.Font = Enum.Font.GothamBold
 Close.TextColor3 = Color3.fromRGB(255, 255, 255)
 Close.Parent = Topbar
-
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 8)
-CloseCorner.Parent = Close
+Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
 
 local Minimize = Instance.new("TextButton")
 Minimize.Size = UDim2.new(0, 38, 0, 26)
@@ -126,10 +107,7 @@ Minimize.TextSize = 18
 Minimize.Font = Enum.Font.GothamBold
 Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
 Minimize.Parent = Topbar
-
-local MiniCorner = Instance.new("UICorner")
-MiniCorner.CornerRadius = UDim.new(0, 8)
-MiniCorner.Parent = Minimize
+Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 8)
 
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, 0, 1, -38)
@@ -141,14 +119,42 @@ local Info = Instance.new("TextLabel")
 Info.Size = UDim2.new(1, -24, 0, 40)
 Info.Position = UDim2.new(0, 12, 0, 12)
 Info.BackgroundTransparency = 1
-Info.Text = "GUI berhasil dibuat ✅"
+Info.Text = "Toggle ESP: Celestial / Common"
 Info.TextSize = 14
 Info.Font = Enum.Font.Gotham
 Info.TextColor3 = Color3.fromRGB(200, 200, 200)
 Info.TextXAlignment = Enum.TextXAlignment.Left
 Info.Parent = Content
 
+-- Tombol ESP Celestial
+local EspCelestialBtn = Instance.new("TextButton")
+EspCelestialBtn.Size = UDim2.new(0, 180, 0, 34)
+EspCelestialBtn.Position = UDim2.new(0, 12, 0, 60)
+EspCelestialBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+EspCelestialBtn.BorderSizePixel = 0
+EspCelestialBtn.Text = "ESP Celestial: OFF"
+EspCelestialBtn.TextSize = 14
+EspCelestialBtn.Font = Enum.Font.GothamSemibold
+EspCelestialBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspCelestialBtn.Parent = Content
+Instance.new("UICorner", EspCelestialBtn).CornerRadius = UDim.new(0, 8)
+
+-- Tombol ESP Common
+local EspCommonBtn = Instance.new("TextButton")
+EspCommonBtn.Size = UDim2.new(0, 180, 0, 34)
+EspCommonBtn.Position = UDim2.new(0, 12, 0, 104)
+EspCommonBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+EspCommonBtn.BorderSizePixel = 0
+EspCommonBtn.Text = "ESP Common: OFF"
+EspCommonBtn.TextSize = 14
+EspCommonBtn.Font = Enum.Font.GothamSemibold
+EspCommonBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspCommonBtn.Parent = Content
+Instance.new("UICorner", EspCommonBtn).CornerRadius = UDim.new(0, 8)
+
+--========================
 -- Drag logic
+--========================
 local dragging = false
 local dragStart, startPos
 
@@ -179,7 +185,9 @@ UIS.InputChanged:Connect(function(input)
 	end
 end)
 
--- Minimize & Close
+--========================
+-- Minimize
+--========================
 local minimized = false
 local normalSize = Window.Size
 local minimizedSize = UDim2.new(0, 420, 0, 38)
@@ -197,7 +205,150 @@ Minimize.MouseButton1Click:Connect(function()
 	end
 end)
 
+--========================
+-- ESP Engine
+--========================
+local ESP = {
+	enabled = { Celestial = false, Common = false },
+	connections = { Celestial = nil, Common = nil },
+	markers = {} -- [Instance] = {hl=..., bb=..., ac=...}
+}
+
+local function getAdornee(inst)
+	if not inst then return nil end
+	if inst:IsA("BasePart") then return inst end
+	return inst:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function removeMarker(inst)
+	local pack = ESP.markers[inst]
+	if not pack then return end
+	pcall(function() pack.hl:Destroy() end)
+	pcall(function() pack.bb:Destroy() end)
+	if pack.ac then pcall(function() pack.ac:Disconnect() end) end
+	ESP.markers[inst] = nil
+end
+
+local function addMarker(inst, labelPrefix)
+	if not inst or ESP.markers[inst] then return end
+
+	local adorneePart = getAdornee(inst)
+	if not adorneePart then return end
+
+	local hl = Instance.new("Highlight")
+	hl.Name = "DjESP_HL"
+	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	hl.Adornee = inst:IsA("Model") and inst or adorneePart
+	hl.Parent = inst
+
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "DjESP_BB"
+	bb.Adornee = adorneePart
+	bb.Size = UDim2.new(0, 220, 0, 34)
+	bb.StudsOffset = Vector3.new(0, 2.5, 0)
+	bb.AlwaysOnTop = true
+	bb.Parent = inst
+
+	local txt = Instance.new("TextLabel")
+	txt.BackgroundTransparency = 1
+	txt.Size = UDim2.new(1, 0, 1, 0)
+	txt.Font = Enum.Font.GothamBold
+	txt.TextSize = 14
+	txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+	txt.TextStrokeTransparency = 0.6
+	txt.Text = ("%s: %s"):format(labelPrefix, inst.Name)
+	txt.Parent = bb
+
+	local ac = inst.AncestryChanged:Connect(function(_, parentNow)
+		if not parentNow then
+			removeMarker(inst)
+		end
+	end)
+
+	ESP.markers[inst] = { hl = hl, bb = bb, ac = ac }
+end
+
+local function getFolder(pathName)
+	local root = workspace:FindFirstChild("ActiveBrainrots")
+	if not root then return nil end
+	return root:FindFirstChild(pathName)
+end
+
+local function scanFolder(folder, labelPrefix)
+	for _, child in ipairs(folder:GetChildren()) do
+		addMarker(child, labelPrefix)
+	end
+end
+
+local function removeMarkersInFolder(folder)
+	for inst, _ in pairs(ESP.markers) do
+		if inst and inst:IsDescendantOf(folder) then
+			removeMarker(inst)
+		end
+	end
+end
+
+local function setEsp(modeName, folderName, labelPrefix, isOn)
+	ESP.enabled[modeName] = isOn
+
+	-- disconnect lama
+	if ESP.connections[modeName] then
+		ESP.connections[modeName]:Disconnect()
+		ESP.connections[modeName] = nil
+	end
+
+	local folder = getFolder(folderName)
+	if not folder then
+		warn(("Folder tidak ketemu: workspace.ActiveBrainrots.%s"):format(folderName))
+		return
+	end
+
+	if not isOn then
+		removeMarkersInFolder(folder)
+		return
+	end
+
+	-- ON: scan existing + listen spawn baru
+	scanFolder(folder, labelPrefix)
+	ESP.connections[modeName] = folder.ChildAdded:Connect(function(child)
+		addMarker(child, labelPrefix)
+	end)
+end
+
+--========================
+-- Button hooks
+--========================
+EspCelestialBtn.MouseButton1Click:Connect(function()
+	local newState = not ESP.enabled.Celestial
+	setEsp("Celestial", "Celestial", "Celestial", newState)
+	EspCelestialBtn.Text = "ESP Celestial: " .. (newState and "ON" or "OFF")
+	EspCelestialBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+end)
+
+EspCommonBtn.MouseButton1Click:Connect(function()
+	local newState = not ESP.enabled.Common
+	setEsp("Common", "Common", "Common", newState)
+	EspCommonBtn.Text = "ESP Common: " .. (newState and "ON" or "OFF")
+	EspCommonBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+end)
+
+--========================
+-- Close cleanup
+--========================
+local function cleanupAll()
+	for _, conn in pairs(ESP.connections) do
+		if conn then conn:Disconnect() end
+	end
+	ESP.connections.Celestial = nil
+	ESP.connections.Common = nil
+
+	for inst, _ in pairs(ESP.markers) do
+		removeMarker(inst)
+	end
+end
+
 Close.MouseButton1Click:Connect(function()
+	cleanupAll()
 	ScreenGui:Destroy()
 end)
 
