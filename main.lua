@@ -1,4 +1,4 @@
---// Dj Hub (Final Stable Version)
+sdadasda
 --// Features: Scrollable UI, Stable Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
@@ -136,6 +136,7 @@ local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165,
 local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 5)
 local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 6)
 local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 7)
+local FastTakeBtn = createButton("Fast Take: OFF", Color3.fromRGB(200, 150, 50), 7)
 
 --========================
 -- 1. PLATFORM LOGIC (STABLE)
@@ -422,7 +423,70 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 		DelWallsBtn.Text = "Walls Folder Not Found"
 	end
 end)
+--========================
+-- 5. FAST TAKE LOGIC
+--========================
+local fastTakeEnabled = false
+local fastTakeConn = {}
 
+local function applyFastTake(model)
+    -- Mencari model di dalam RenderedBrainrot (seperti Tim Cheese)
+    for _, innerModel in pairs(model:GetChildren()) do
+        if innerModel:IsA("Model") then
+            local root = innerModel:FindFirstChild("Root")
+            if root then
+                local prompt = root:FindFirstChild("TakePromt") or root:FindFirstChildWhichIsA("ProximityPrompt")
+                if prompt then
+                    -- Simpan setting asli jika ingin di-reset nanti
+                    if not prompt:GetAttribute("OldHold") then
+                        prompt:SetAttribute("OldHold", prompt.HoldDuration)
+                        prompt:SetAttribute("OldMaxDist", prompt.MaxActivationDistance)
+                    end
+                    
+                    -- Ubah ke settingan instan
+                    prompt.HoldDuration = 0
+                    prompt.MaxActivationDistance = 15
+                end
+            end
+        end
+    end
+end
+
+FastTakeBtn.MouseButton1Click:Connect(function()
+    fastTakeEnabled = not fastTakeEnabled
+    FastTakeBtn.Text = "Fast Take: " .. (fastTakeEnabled and "ON" or "OFF")
+    FastTakeBtn.BackgroundColor3 = fastTakeEnabled and Color3.fromRGB(230, 180, 50) or Color3.fromRGB(200, 150, 50)
+
+    local activeFolder = workspace:FindFirstChild("ActiveBrainrots")
+    if not activeFolder then return end
+
+    if fastTakeEnabled then
+        -- Apply ke yang sudah ada di semua sub-folder (Common, Divine, dll)
+        for _, subFolder in pairs(activeFolder:GetChildren()) do
+            if subFolder:IsA("Folder") then
+                for _, rb in pairs(subFolder:GetChildren()) do
+                    if rb.Name == "RenderedBrainrot" then
+                        applyFastTake(rb)
+                    end
+                end
+                
+                -- Pantau jika ada brainrot baru yang muncul
+                fastTakeConn[subFolder.Name] = subFolder.ChildAdded:Connect(function(child)
+                    task.wait(0.5) -- Tunggu sebentar agar model ter-load sempurna
+                    if child.Name == "RenderedBrainrot" then
+                        applyFastTake(child)
+                    end
+                end)
+            end
+        end
+    else
+        -- Matikan koneksi dan kembalikan settingan (Opsional)
+        for name, conn in pairs(fastTakeConn) do
+            conn:Disconnect()
+        end
+        fastTakeConn = {}
+    end
+end)
 --========================
 -- GUI Systems (Drag/Min/Close)
 --========================
@@ -447,6 +511,10 @@ Minimize.MouseButton1Click:Connect(function()
 end)
 
 Close.MouseButton1Click:Connect(function()
+    -- ... kode yang sudah ada ...
+    for _, conn in pairs(fastTakeConn) do if conn then conn:Disconnect() end end
+    ScreenGui:Destroy()
+end)
 	if pConn then pConn:Disconnect() end
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
