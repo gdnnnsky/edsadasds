@@ -1,5 +1,4 @@
---// Dj Hub (Scrollable + Noclip + Divine + Platform)
---// LocalScript di StarterPlayerScripts / StarterGui
+dsadaa
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
