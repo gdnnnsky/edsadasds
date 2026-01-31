@@ -1,5 +1,5 @@
---// Dj Hub (Ultimate God Mode Version)
---// Features: Ultimate God, Stable Platform, Noclip, ESP, Wall Remover
+--// Dj Hub (Absolute God Mode Version)
+--// Fitur: God Mode Absolut, Platform, Noclip, ESP, Wall Remover
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -47,7 +47,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -120, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Dj Hub - ULTIMATE GOD"
+Title.Text = "Dj Hub - ABSOLUTE GOD"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamSemibold
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -90,55 +90,66 @@ end
 --========================
 -- Buttons
 --========================
-local GodBtn         = createButton("ULTIMATE GOD: OFF", Color3.fromRGB(200, 50, 50), 0)
+local GodBtn         = createButton("ABSOLUTE GOD: OFF", Color3.fromRGB(200, 50, 50), 0)
 local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
 local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
 local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(180, 150, 0), 3)
 local DelWallsBtn     = createButton("Delete Walls", Color3.fromRGB(180, 100, 40), 6)
 
 --========================
--- 1. ULTIMATE GOD LOGIC
+-- 1. ABSOLUTE GOD LOGIC (ANTI-RESET METODE)
 --========================
-local godModeOn = false
-local godConn1, godConn2 = nil, nil
+local absoluteGod = false
+local godLoop = nil
 
 GodBtn.MouseButton1Click:Connect(function()
-	godModeOn = not godModeOn
-	GodBtn.Text = "ULTIMATE GOD: " .. (godModeOn and "ON" or "OFF")
-	GodBtn.BackgroundColor3 = godModeOn and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+	absoluteGod = not absoluteGod
+	GodBtn.Text = "ABSOLUTE GOD: " .. (absoluteGod and "ON" or "OFF")
+	GodBtn.BackgroundColor3 = absoluteGod and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
 
-	if godModeOn then
-		-- LOOP 1: Mengunci Health & State (Fast Loop)
-		godConn1 = RunService.Heartbeat:Connect(function()
+	if absoluteGod then
+		-- Hapus semua sensor damage yang ada di map saat ini
+		for _, v in pairs(workspace:GetDescendants()) do
+			if v:IsA("TouchTransmitter") then v:Destroy() end
+		end
+
+		godLoop = RunService.Heartbeat:Connect(function()
 			if lp.Character then
 				local hum = lp.Character:FindFirstChildOfClass("Humanoid")
 				if hum then
+					-- Mengunci nyawa agar tidak berkurang sama sekali
 					hum.Health = hum.MaxHealth
+					-- Menonaktifkan deteksi "Mati"
 					hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+					
+					-- Anti-Kematian Paksa: Jika server memaksa nyawa ke 0, kita tarik ke atas lagi
+					if hum.Health <= 0 then
+						hum.Health = hum.MaxHealth
+					end
 				end
-				-- Mematikan Touch karakter sendiri
-				for _, v in pairs(lp.Character:GetDescendants()) do
-					if v:IsA("BasePart") then v.CanTouch = false end
+				
+				-- Membuat seluruh tubuh kebal terhadap sentuhan objek luar
+				for _, part in pairs(lp.Character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanTouch = false
+					end
 				end
 			end
 		end)
-
-		-- LOOP 2: Menghapus "Sensor Damage" dari semua objek di map secara lokal
-		godConn2 = RunService.Stepped:Connect(function()
-			for _, part in pairs(workspace:GetDescendants()) do
-				if part:IsA("TouchTransmitter") then
-					-- Jika ini sensor damage dari objek luar, kita hapus secara paksa
-					part:Destroy()
-				end
+		
+		-- Loop kedua khusus menghapus sensor damage baru yang muncul
+		godLoop2 = workspace.DescendantAdded:Connect(function(v)
+			if absoluteGod and v:IsA("TouchTransmitter") then
+				v:Destroy()
 			end
 		end)
 	else
-		if godConn1 then godConn1:Disconnect() end
-		if godConn2 then godConn2:Disconnect() end
+		if godLoop then godLoop:Disconnect() end
+		if godLoop2 then godLoop2:Disconnect() end
 		if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
 			lp.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-			for _, v in pairs(lp.Character:GetDescendants()) do
-				if v:IsA("BasePart") then v.CanTouch = true end
+			for _, part in pairs(lp.Character:GetDescendants()) do
+				if part:IsA("BasePart") then part.CanTouch = true end
 			end
 		end
 	end
@@ -219,5 +230,3 @@ UIS.InputChanged:Connect(function(i)
 		Window.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X, sp.Y.Scale, sp.Y.Offset + delta.Y)
 	end
 end)
-
-print("✅ Dj Hub Loaded with Ultimate God Mode.")
