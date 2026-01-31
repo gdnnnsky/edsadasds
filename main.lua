@@ -1,15 +1,28 @@
---// Dj Hub - Premium v2 (Mobile Friendly & Minimalist UI)
---// Credits: Dj Hub Team
---// Features: Platform, Noclip, ESP, Wall Remover, Fast Take (Instant)
+--// Dj Hub (Remastered UI Version)
+--// Mobile Friendly & Minimalist Design
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
 local lp = Players.LocalPlayer
 
---========================
--- GUI Parent Setup
---========================
+--=============================================================================
+--// GUI LIBRARY & SETUP (UI VISUALS)
+--=============================================================================
+
+local Library = {}
+local colors = {
+	background = Color3.fromRGB(15, 15, 15),
+	accent = Color3.fromRGB(255, 120, 30), -- Warna Orange mirip Lynx
+	text = Color3.fromRGB(240, 240, 240),
+	subText = Color3.fromRGB(150, 150, 150),
+	toggleOn = Color3.fromRGB(255, 120, 30),
+	toggleOff = Color3.fromRGB(60, 60, 60)
+}
+
+-- 1. Setup Parent
 local function pickGuiParent()
 	if lp then
 		local pg = lp:FindFirstChildOfClass("PlayerGui")
@@ -23,176 +36,376 @@ end
 local parent = pickGuiParent()
 if not parent then return end
 
+-- Cleanup Old GUI
 pcall(function()
-	local old = parent:FindFirstChild("DjWindowGUI")
-	if old then old:Destroy() end
+	if parent:FindFirstChild("DjHubRemastered") then
+		parent.DjHubRemastered:Destroy()
+	end
 end)
 
---========================
--- Utility: Draggable System (PC & Mobile)
---========================
-local function makeDraggable(gui, handle)
+-- 2. Create Main GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DjHubRemastered"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = parent
+
+-- 3. Dragging Function (Mobile Support)
+local function makeDraggable(frame, handle)
+	handle = handle or frame
 	local dragging, dragInput, dragStart, startPos
+	
+	local function update(input)
+		local delta = input.Position - dragStart
+		local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		TweenService:Create(frame, TweenInfo.new(0.1), {Position = newPos}):Play()
+	end
+	
 	handle.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
-			startPos = gui.Position
+			startPos = frame.Position
+			
 			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then dragging = false end
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
 			end)
 		end
 	end)
+	
 	handle.InputChanged:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
-	RunService.RenderStepped:Connect(function()
-		if dragging and dragInput then
-			local delta = dragInput.Position - dragStart
-			gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
 		end
 	end)
 end
 
---========================
--- Main GUI Components
---========================
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "DjWindowGUI"
-ScreenGui.ResetOnSpawn = false
-ScreenGui.Parent = parent
+-- 4. Main Window Construction
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 450, 0, 320)
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -160)
+MainFrame.BackgroundColor3 = colors.background
+MainFrame.BackgroundTransparency = 0.15 -- Transparan dikit
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
 
--- Kotak Minimize (Kecil)
-local MinBox = Instance.new("TextButton")
-MinBox.Name = "MinBox"
-MinBox.Size = UDim2.new(0, 50, 0, 50)
-MinBox.Position = UDim2.new(0.1, 0, 0.5, 0)
-MinBox.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-MinBox.BackgroundTransparency = 0.3
-MinBox.Text = "Dj"
-MinBox.Font = Enum.Font.GothamBold
-MinBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinBox.Visible = false
-MinBox.Parent = ScreenGui
-Instance.new("UICorner", MinBox).CornerRadius = UDim.new(0, 12)
-makeDraggable(MinBox, MinBox)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
 
--- Main Window
-local Window = Instance.new("Frame")
-Window.Name = "Window"
-Window.Size = UDim2.new(0, 380, 0, 420)
-Window.Position = UDim2.new(0.5, -190, 0.5, -210)
-Window.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Window.BackgroundTransparency = 0.5 -- Transparan setengah
-Window.BorderSizePixel = 0
-Window.Parent = ScreenGui
-Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 12)
+-- Side Accent Line (Style Lynx)
+local AccentLine = Instance.new("Frame")
+AccentLine.Size = UDim2.new(0, 4, 1, 0)
+AccentLine.BackgroundColor3 = colors.accent
+AccentLine.BorderSizePixel = 0
+AccentLine.Parent = MainFrame
+Instance.new("UICorner", AccentLine).CornerRadius = UDim.new(0, 8)
 
-local Topbar = Instance.new("Frame")
-Topbar.Size = UDim2.new(1, 0, 0, 45)
-Topbar.BackgroundTransparency = 1
-Topbar.Parent = Window
-makeDraggable(Window, Topbar)
+-- Header
+local Header = Instance.new("Frame")
+Header.Size = UDim2.new(1, -20, 0, 40)
+Header.Position = UDim2.new(0, 20, 0, 0)
+Header.BackgroundTransparency = 1
+Header.Parent = MainFrame
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -80, 1, 0)
-Title.Position = UDim2.new(0, 15, 0, 0)
-Title.Text = "Dj Hub Premium"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.Text = "Dj Hub <font color=\"rgb(255,120,30)\">Premium</font>"
+Title.RichText = true
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 18
-Title.BackgroundTransparency = 1
+Title.TextColor3 = colors.text
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.TextXAlignment = Enum.TextXAlignment.Left
-Title.Parent = Topbar
+Title.BackgroundTransparency = 1
+Title.Parent = Header
+
+-- Buttons (Close & Min)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Text = "×"
+CloseBtn.Font = Enum.Font.GothamMedium
+CloseBtn.TextSize = 24
+CloseBtn.TextColor3 = colors.text
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Size = UDim2.new(0, 40, 1, 0)
+CloseBtn.Position = UDim2.new(1, -40, 0, 0)
+CloseBtn.Parent = Header
 
 local MinBtn = Instance.new("TextButton")
-MinBtn.Size = UDim2.new(0, 32, 0, 32)
-MinBtn.Position = UDim2.new(1, -45, 0, 6)
-MinBtn.Text = "-"
-MinBtn.Font = Enum.Font.GothamBold
-MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinBtn.Parent = Topbar
-Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 8)
+MinBtn.Text = "−"
+MinBtn.Font = Enum.Font.GothamMedium
+MinBtn.TextSize = 24
+MinBtn.TextColor3 = colors.text
+MinBtn.BackgroundTransparency = 1
+MinBtn.Size = UDim2.new(0, 40, 1, 0)
+MinBtn.Position = UDim2.new(1, -80, 0, 0)
+MinBtn.Parent = Header
 
--- Scrolling Content
-local Scroll = Instance.new("ScrollingFrame")
-Scroll.Size = UDim2.new(1, -20, 1, -70)
-Scroll.Position = UDim2.new(0, 10, 0, 60)
-Scroll.BackgroundTransparency = 1
-Scroll.BorderSizePixel = 0
-Scroll.ScrollBarThickness = 2
-Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-Scroll.Parent = Window
+-- Content Container
+local Container = Instance.new("ScrollingFrame")
+Container.Size = UDim2.new(1, -24, 1, -50)
+Container.Position = UDim2.new(0, 14, 0, 45)
+Container.BackgroundTransparency = 1
+Container.BorderSizePixel = 0
+Container.ScrollBarThickness = 2
+Container.ScrollBarImageColor3 = colors.accent
+Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Container.Parent = MainFrame
 
 local UIList = Instance.new("UIListLayout")
-UIList.Parent = Scroll
-UIList.Padding = UDim.new(0, 12)
-UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.Parent = Container
+UIList.Padding = UDim.new(0, 6)
+UIList.SortOrder = Enum.SortOrder.LayoutOrder
 
---========================
--- Minimalist Toggle Function
---========================
-local function createFeature(text, callback)
-	local Frame = Instance.new("Frame")
-	Frame.Size = UDim2.new(0, 340, 0, 45)
-	Frame.BackgroundTransparency = 1
-	Frame.Parent = Scroll
+-- Apply Drag
+makeDraggable(MainFrame, Header)
 
+-- 5. Component Functions (Toggle & Button)
+
+local function CreateToggle(text, callback)
+	local ToggleFrame = Instance.new("Frame")
+	ToggleFrame.Size = UDim2.new(1, 0, 0, 36)
+	ToggleFrame.BackgroundTransparency = 1
+	ToggleFrame.Parent = Container
+	
 	local Label = Instance.new("TextLabel")
-	Label.Size = UDim2.new(0.7, 0, 1, 0)
 	Label.Text = text
-	Label.TextColor3 = Color3.fromRGB(230, 230, 230)
-	Label.Font = Enum.Font.GothamMedium
-	Label.TextSize = 15
-	Label.BackgroundTransparency = 1
+	Label.Font = Enum.Font.GothamSemibold
+	Label.TextSize = 14
+	Label.TextColor3 = colors.text
+	Label.Size = UDim2.new(0.7, 0, 1, 0)
+	Label.Position = UDim2.new(0, 10, 0, 0)
 	Label.TextXAlignment = Enum.TextXAlignment.Left
-	Label.Parent = Frame
+	Label.BackgroundTransparency = 1
+	Label.Parent = ToggleFrame
+	
+	local SwitchBg = Instance.new("Frame")
+	SwitchBg.Size = UDim2.new(0, 44, 0, 22)
+	SwitchBg.Position = UDim2.new(1, -54, 0.5, -11)
+	SwitchBg.BackgroundColor3 = colors.toggleOff
+	SwitchBg.Parent = ToggleFrame
+	Instance.new("UICorner", SwitchBg).CornerRadius = UDim.new(1, 0)
+	
+	local Circle = Instance.new("Frame")
+	Circle.Size = UDim2.new(0, 18, 0, 18)
+	Circle.Position = UDim2.new(0, 2, 0.5, -9)
+	Circle.BackgroundColor3 = Color3.fromRGB(255,255,255)
+	Circle.Parent = SwitchBg
+	Instance.new("UICorner", Circle).CornerRadius = UDim.new(1, 0)
+	
+	local Trigger = Instance.new("TextButton")
+	Trigger.Size = UDim2.new(1, 0, 1, 0)
+	Trigger.BackgroundTransparency = 1
+	Trigger.Text = ""
+	Trigger.Parent = ToggleFrame
+	
+	local toggled = false
+	
+	Trigger.MouseButton1Click:Connect(function()
+		toggled = not toggled
+		
+		-- Animation
+		local targetColor = toggled and colors.toggleOn or colors.toggleOff
+		local targetPos = toggled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 2, 0.5, -9)
+		
+		TweenService:Create(SwitchBg, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+		TweenService:Create(Circle, TweenInfo.new(0.2), {Position = targetPos}):Play()
+		
+		-- Logic Callback
+		pcall(callback)
+	end)
+	
+	return Trigger -- Return trigger if needed
+end
 
-	local ToggleBG = Instance.new("TextButton")
-	ToggleBG.Size = UDim2.new(0, 48, 0, 24)
-	ToggleBG.Position = UDim2.new(1, -55, 0.5, -12)
-	ToggleBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-	ToggleBG.Text = ""
-	ToggleBG.Parent = Frame
-	local corner = Instance.new("UICorner", ToggleBG)
-	corner.CornerRadius = UDim.new(1, 0)
-
-	local Dot = Instance.new("Frame")
-	Dot.Size = UDim2.new(0, 18, 0, 18)
-	Dot.Position = UDim2.new(0, 3, 0.5, -9)
-	Dot.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
-	Dot.Parent = ToggleBG
-	Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
-
-	local enabled = false
-	ToggleBG.MouseButton1Click:Connect(function()
-		enabled = not enabled
-		ToggleBG.BackgroundColor3 = enabled and Color3.fromRGB(230, 126, 34) or Color3.fromRGB(60, 60, 60)
-		Dot:TweenPosition(enabled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9), "Out", "Quad", 0.2, true)
-		callback(enabled)
+local function CreateButton(text, callback)
+	local BtnFrame = Instance.new("Frame")
+	BtnFrame.Size = UDim2.new(1, 0, 0, 36)
+	BtnFrame.BackgroundTransparency = 1
+	BtnFrame.Parent = Container
+	
+	local Btn = Instance.new("TextButton")
+	Btn.Size = UDim2.new(1, -10, 1, 0)
+	Btn.Position = UDim2.new(0, 5, 0, 0)
+	Btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	Btn.Text = text
+	Btn.TextColor3 = colors.text
+	Btn.Font = Enum.Font.GothamBold
+	Btn.TextSize = 14
+	Btn.Parent = BtnFrame
+	Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+	
+	Btn.MouseButton1Click:Connect(function()
+		-- Click Effect
+		TweenService:Create(Btn, TweenInfo.new(0.1), {BackgroundColor3 = colors.accent}):Play()
+		task.delay(0.1, function()
+			TweenService:Create(Btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+		end)
+		pcall(callback)
 	end)
 end
 
---========================
--- Features Implementation
---========================
+local function CreateSection(text)
+	local Sec = Instance.new("TextLabel")
+	Sec.Text = text
+	Sec.Size = UDim2.new(1, 0, 0, 25)
+	Sec.BackgroundTransparency = 1
+	Sec.TextColor3 = colors.subText
+	Sec.Font = Enum.Font.GothamBold
+	Sec.TextSize = 12
+	Sec.TextXAlignment = Enum.TextXAlignment.Left
+	Sec.Position = UDim2.new(0, 10, 0, 0)
+	Instance.new("UIPadding", Sec).PaddingLeft = UDim.new(0,10)
+	Sec.Parent = Container
+end
 
--- 1. Platform
+-- 6. Minimize Logic (Kotak Kecil)
+local minimized = false
+local restoreSize = MainFrame.Size
+local restorePos = MainFrame.Position
+
+-- Icon untuk mode minimize
+local MinIcon = Instance.new("TextButton")
+MinIcon.Name = "MiniIcon"
+MinIcon.Size = UDim2.new(0, 50, 0, 50)
+MinIcon.BackgroundColor3 = colors.background
+MinIcon.BackgroundTransparency = 0.1
+MinIcon.Text = "DJ"
+MinIcon.TextColor3 = colors.accent
+MinIcon.Font = Enum.Font.GothamBlack
+MinIcon.TextSize = 18
+MinIcon.Visible = false
+MinIcon.Parent = ScreenGui
+Instance.new("UICorner", MinIcon).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", MinIcon).Color = colors.accent
+Instance.new("UIStroke", MinIcon).Thickness = 2
+Instance.new("UIStroke", MinIcon).ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Buat icon bisa didrag juga
+makeDraggable(MinIcon)
+
+MinBtn.MouseButton1Click:Connect(function()
+	minimized = true
+	restorePos = MainFrame.Position -- Save posisi terakhir
+	MainFrame.Visible = false
+	MinIcon.Visible = true
+	MinIcon.Position = restorePos -- Muncul di posisi GUI terakhir
+end)
+
+MinIcon.MouseButton1Click:Connect(function()
+	minimized = false
+	MinIcon.Visible = false
+	MainFrame.Visible = true
+	MainFrame.Position = MinIcon.Position -- Restore di posisi icon terakhir
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+	ScreenGui:Destroy()
+end)
+
+--=============================================================================
+--// FEATURE LOGIC INTEGRATION (Logic Asli)
+--=============================================================================
+
+-- Variables Logic
+local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
-createFeature("Stable Platform", function(state)
-	if state then
+local noclipOn = false
+local noclipConn = nil
+local ESP = { enabled = {}, connections = {}, markers = {} }
+local fastTakeEnabled = false
+local ftConnection = nil
+
+-- 1. Helper Logic Functions
+local function removeMarker(obj)
+	local data = ESP.markers[obj]
+	if data then
+		pcall(function() data.hl:Destroy() data.bb:Destroy() data.ac:Disconnect() end)
+		ESP.markers[obj] = nil
+	end
+end
+
+local function addMarker(obj, label)
+	if not obj:IsA("Model") or obj.Name ~= "RenderedBrainrot" then return end
+	local root = obj:FindFirstChild("Root") or obj:FindFirstChildWhichIsA("BasePart", true)
+	if not root or ESP.markers[obj] then return end
+
+	local hl = Instance.new("Highlight", obj)
+	hl.FillColor = (label == "Divine" and Color3.fromRGB(255,215,0)) or (label == "Celestial" and Color3.fromRGB(0,255,255)) or Color3.fromRGB(200,200,200)
+
+	local bb = Instance.new("BillboardGui", obj)
+	bb.Adornee = root
+	bb.Size = UDim2.new(0, 200, 0, 50)
+	bb.AlwaysOnTop = true
+	bb.StudsOffset = Vector3.new(0, 3, 0)
+	
+	local txt = Instance.new("TextLabel", bb)
+	txt.Size = UDim2.new(1,0,1,0)
+	txt.BackgroundTransparency = 1
+	txt.TextColor3 = Color3.new(1,1,1)
+	txt.TextStrokeTransparency = 0
+	txt.Font = Enum.Font.GothamBold
+	txt.Text = label .. " Brainrot"
+
+	ESP.markers[obj] = { hl = hl, bb = bb, ac = obj.AncestryChanged:Connect(function() if not obj.Parent then removeMarker(obj) end end) }
+end
+
+local function toggleEspLogic(mode, folderName)
+	ESP.enabled[mode] = not ESP.enabled[mode]
+	local isOn = ESP.enabled[mode]
+
+	if ESP.connections[mode] then ESP.connections[mode]:Disconnect() end
+	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild(folderName)
+	
+	if isOn and folder then
+		for _, v in pairs(folder:GetChildren()) do addMarker(v, mode) end
+		ESP.connections[mode] = folder.ChildAdded:Connect(function(c) addMarker(c, mode) end)
+	else
+		for obj, _ in pairs(ESP.markers) do if obj:IsDescendantOf(folder) then removeMarker(obj) end end
+	end
+end
+
+local function applyFastTake(prompt)
+	if prompt:IsA("ProximityPrompt") and prompt.Name == "TakePrompt" then
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = 25
+	end
+end
+
+--=============================================================================
+--// UI ELEMENT CREATION (MAPPING LOGIC KE UI)
+--=============================================================================
+
+CreateSection("PLAYER")
+
+CreateToggle("Platform Walk", function()
+	platformEnabled = not platformEnabled
+	if platformEnabled then
 		pPart = Instance.new("Part", workspace)
 		pPart.Name = "DjPlatform"
-		pPart.Size, pPart.Anchored, pPart.Transparency = Vector3.new(15, 0.5, 15), true, 0.5
-		pPart.Material, pPart.Color = Enum.Material.ForceField, Color3.fromRGB(0, 255, 255)
-		if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then lastY = lp.Character.HumanoidRootPart.Position.Y - 3.2 end
+		pPart.Size = Vector3.new(15, 0.5, 15)
+		pPart.Anchored = true
+		pPart.Transparency = 0.5
+		pPart.Material = Enum.Material.ForceField
+		pPart.Color = Color3.fromRGB(0, 255, 255)
+
+		if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+			lastY = lp.Character.HumanoidRootPart.Position.Y - 3.2
+		end
+
 		pConn = RunService.PostSimulation:Connect(function()
 			if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
 				local hrp = lp.Character.HumanoidRootPart
-				if lp.Character.Humanoid.FloorMaterial == Enum.Material.Air then lastY = hrp.Position.Y - 3.2 end
+				local hum = lp.Character:FindFirstChild("Humanoid")
+				if hum and hum.FloorMaterial == Enum.Material.Air then
+					lastY = hrp.Position.Y - 3.2
+				end
 				pPart.CFrame = CFrame.new(hrp.Position.X, lastY, hrp.Position.Z)
 			end
 		end)
@@ -202,13 +415,14 @@ createFeature("Stable Platform", function(state)
 	end
 end)
 
--- 2. Noclip
-local noclipConn = nil
-createFeature("Noclip (Pass Walls)", function(state)
-	if state then
+CreateToggle("Noclip", function()
+	noclipOn = not noclipOn
+	if noclipOn then
 		noclipConn = RunService.Stepped:Connect(function()
 			if lp.Character then
-				for _, v in pairs(lp.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end
+				for _, v in pairs(lp.Character:GetDescendants()) do
+					if v:IsA("BasePart") then v.CanCollide = false end
+				end
 			end
 		end)
 	else
@@ -216,90 +430,40 @@ createFeature("Noclip (Pass Walls)", function(state)
 	end
 end)
 
--- 3. ESP System (Generic)
-local ESP_Markers = {}
-local function clearEsp(rarity)
-    for obj, folderName in pairs(ESP_Markers) do
-        if folderName == rarity and obj:FindFirstChild("Highlight") then obj.Highlight:Destroy() end
-    end
-end
+CreateSection("VISUALS (ESP)")
 
-createFeature("ESP Divine", function(state)
-	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild("Divine")
-	if state and folder then
-		for _, v in pairs(folder:GetChildren()) do
-			if v.Name == "RenderedBrainrot" then
-				local hl = Instance.new("Highlight", v)
-				hl.FillColor = Color3.fromRGB(255, 215, 0)
-                ESP_Markers[v] = "Divine"
-			end
-		end
-	else
-		clearEsp("Divine")
-	end
-end)
+CreateToggle("ESP Divine", function() toggleEspLogic("Divine", "Divine") end)
+CreateToggle("ESP Celestial", function() toggleEspLogic("Celestial", "Celestial") end)
+CreateToggle("ESP Common", function() toggleEspLogic("Common", "Common") end)
 
-createFeature("ESP Common", function(state)
-	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild("Common")
-	if state and folder then
-		for _, v in pairs(folder:GetChildren()) do
-			if v.Name == "RenderedBrainrot" then
-				local hl = Instance.new("Highlight", v)
-				hl.FillColor = Color3.fromRGB(200, 200, 200)
-                ESP_Markers[v] = "Common"
-			end
-		end
-	else
-		clearEsp("Common")
-	end
-end)
+CreateSection("MISC")
 
--- 4. Delete Walls
-createFeature("Delete VIP Walls", function(state)
-	if state then
-		local walls = workspace:FindFirstChild("VIPWalls") or workspace:FindFirstChild("Wallses")
-		if walls then for _, v in pairs(walls:GetChildren()) do v:Destroy() end end
-	end
-end)
-
--- 5. Fast Take (Instant)
-local ftConn = nil
-local function setupPrompt(p)
-    if p:IsA("ProximityPrompt") and p.Name == "TakePrompt" then
-        p.HoldDuration = 0
-        p.MaxActivationDistance = 20
-    end
-end
-
-createFeature("Fast Take (Instant)", function(state)
+CreateToggle("Fast Take", function()
+	fastTakeEnabled = not fastTakeEnabled
 	local activeFolder = workspace:FindFirstChild("ActiveBrainrots")
 	if not activeFolder then return end
 
-	if state then
-		for _, d in pairs(activeFolder:GetDescendants()) do setupPrompt(d) end
-		ftConn = activeFolder.DescendantAdded:Connect(function(d)
-			task.wait(0.1)
-			setupPrompt(d)
+	if fastTakeEnabled then
+		for _, descendant in pairs(activeFolder:GetDescendants()) do
+			applyFastTake(descendant)
+		end
+		ftConnection = activeFolder.DescendantAdded:Connect(function(desc)
+			if desc.Name == "TakePrompt" then
+				task.wait(0.1)
+				applyFastTake(desc)
+			end
 		end)
-	elseif ftConn then
-		ftConn:Disconnect()
-		ftConn = nil
+	else
+		if ftConnection then ftConnection:Disconnect() ftConnection = nil end
 	end
 end)
 
---========================
--- Minimize Logic
---========================
-MinBtn.MouseButton1Click:Connect(function()
-	Window.Visible = false
-	MinBox.Visible = true
-	MinBox.Position = Window.Position
+CreateButton("Delete Safe Walls", function()
+	local walls = workspace:FindFirstChild("VIPWalls") or workspace:FindFirstChild("Wallses")
+	if walls then
+		for _, v in pairs(walls:GetChildren()) do v:Destroy() end
+	end
 end)
 
-MinBox.MouseButton1Click:Connect(function()
-	Window.Visible = true
-	MinBox.Visible = false
-	Window.Position = MinBox.Position
-end)
-
-print("✅ Dj Hub v2 Fully Loaded - Aesthetic & Fixed!")
+-- Finish
+print("✅ Dj Hub Remastered Loaded")
