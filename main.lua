@@ -1,4 +1,4 @@
---// Dj Hub (Final Stable Version - Fixed)
+--// Dj Hub (Final Stable Version - Fixed Fast Take)
 --// Features: Scrollable UI, Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
 
 --========================
--- GUI Parent Setup
+-- GUI Parent Setup [cite: 1]
 --========================
 local function pickGuiParent()
 	if lp then
@@ -29,7 +29,7 @@ pcall(function()
 end)
 
 --========================
--- Build Main GUI
+-- Build Main GUI [cite: 2, 3]
 --========================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DjWindowGUI"
@@ -111,7 +111,7 @@ UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 Instance.new("UIPadding", Scroll).PaddingTop = UDim.new(0, 5)
 
--- Helper Button Function
+-- Helper Button Function [cite: 4]
 local function createButton(text, color, order)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0, 380, 0, 40)
@@ -135,10 +135,10 @@ local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165,
 local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 4)
 local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 5)
 local DelWallsBtn      = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 6)
-local FastTakeBtn     = createButton("Fast Take: OFF", Color3.fromRGB(46, 204, 113), 7) -- Tombol baru
+local FastTakeBtn     = createButton("Fast Take: OFF", Color3.fromRGB(230, 126, 34), 7)
 
 --========================
--- 1. PLATFORM LOGIC
+-- 1. PLATFORM LOGIC [cite: 5, 6]
 --========================
 local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
@@ -202,7 +202,7 @@ NoclipBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- 3. ESP SYSTEM
+-- 3. ESP SYSTEM [cite: 7, 8]
 --========================
 local ESP = { enabled = {}, connections = {}, markers = {} }
 
@@ -246,18 +246,13 @@ local function toggleEsp(mode, folderName, btn)
 	btn.BackgroundColor3 = isOn and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
 
 	if ESP.connections[mode] then ESP.connections[mode]:Disconnect() end
-	local ab = workspace:FindFirstChild("ActiveBrainrots")
-	local folder = ab and ab:FindFirstChild(folderName)
+	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild(folderName)
 	
 	if isOn and folder then
 		for _, v in pairs(folder:GetChildren()) do addMarker(v, mode) end
 		ESP.connections[mode] = folder.ChildAdded:Connect(function(c) addMarker(c, mode) end)
 	else
-		for obj, _ in pairs(ESP.markers) do 
-			if folder and obj:IsDescendantOf(folder) then 
-				removeMarker(obj) 
-			end 
-		end
+		for obj, _ in pairs(ESP.markers) do if obj:IsDescendantOf(folder) then removeMarker(obj) end end
 	end
 end
 
@@ -280,59 +275,68 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- 5. FAST TAKE LOGIC (NEW)
+-- 5. FAST TAKE LOGIC (BASED ON IMAGE STRUCTURE)
 --========================
-local fastTakeActive = false
-local fastTakeConns = {}
+local fastTakeEnabled = false
+local ftConnections = {}
 
-local function applyFastTake(renderedModel)
-	if not renderedModel:IsA("Model") then return end
-	-- Struktur: RenderedBrainrot -> [Model Brainrot] -> Root -> TakePromt
-	for _, subItem in pairs(renderedModel:GetChildren()) do
-		if subItem:IsA("Model") then
-			local root = subItem:FindFirstChild("Root")
-			if root then
-				local prompt = root:FindFirstChild("TakePrompt") or root:FindFirstChildWhichIsA("ProximityPrompt")
-				if prompt then
-					prompt.HoldDuration = 0
-					prompt.MaxActivationDistance = 15
-				end
-			end
-		end
-	end
+local function setupPrompt(renderedBrainrot)
+    if not renderedBrainrot:IsA("Model") then return end
+    
+    -- Struktur: ActiveBrainrots -> Folder -> RenderedBrainrot -> [BrainrotName] -> Root -> TakePrompt
+    for _, brainrotModel in pairs(renderedBrainrot:GetChildren()) do
+        if brainrotModel:IsA("Model") then
+            local root = brainrotModel:FindFirstChild("Root")
+            if root then
+                -- Perbaikan Nama: TakePrompt (dengan 'p' dan 't' sesuai gambar)
+                local prompt = root:FindFirstChild("TakePrompt") or root:FindFirstChildWhichIsA("ProximityPrompt")
+                if prompt then
+                    prompt.HoldDuration = 0
+                    prompt.MaxActivationDistance = 15
+                end
+            end
+        end
+    end
 end
 
 FastTakeBtn.MouseButton1Click:Connect(function()
-	fastTakeActive = not fastTakeActive
-	FastTakeBtn.Text = "Fast Take: " .. (fastTakeActive and "ON" or "OFF")
-	FastTakeBtn.BackgroundColor3 = fastTakeActive and Color3.fromRGB(39, 174, 96) or Color3.fromRGB(46, 204, 113)
+    fastTakeEnabled = not fastTakeEnabled
+    FastTakeBtn.Text = "Fast Take: " .. (fastTakeEnabled and "ON" or "OFF")
+    FastTakeBtn.BackgroundColor3 = fastTakeEnabled and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(230, 126, 34)
 
-	local ab = workspace:FindFirstChild("ActiveBrainrots")
-	if not ab then return end
+    local activeFolder = workspace:FindFirstChild("ActiveBrainrots")
+    if not activeFolder then return end
 
-	if fastTakeActive then
-		for _, folder in pairs(ab:GetChildren()) do
-			if folder:IsA("Folder") then
-				-- Scan yang sudah ada
-				for _, rb in pairs(folder:GetChildren()) do
-					if rb.Name == "RenderedBrainrot" then applyFastTake(rb) end
-				end
-				-- Pantau yang akan muncul
-				fastTakeConns[folder.Name] = folder.ChildAdded:Connect(function(child)
-					task.wait(0.2)
-					if child.Name == "RenderedBrainrot" then applyFastTake(child) end
-				end)
-			end
-		end
-	else
-		-- Matikan koneksi
-		for _, conn in pairs(fastTakeConns) do conn:Disconnect() end
-		fastTakeConns = {}
-	end
+    if fastTakeEnabled then
+        -- 1. Scan folder kelangkaan (Common, Celestial, dll)
+        for _, rarityFolder in pairs(activeFolder:GetChildren()) do
+            if rarityFolder:IsA("Folder") then
+                -- Scan RenderedBrainrot yang sudah ada
+                for _, rb in pairs(rarityFolder:GetChildren()) do
+                    if rb.Name == "RenderedBrainrot" then
+                        setupPrompt(rb)
+                    end
+                end
+                -- 2. Pantau spawn baru di folder kelangkaan tersebut
+                ftConnections[rarityFolder.Name] = rarityFolder.ChildAdded:Connect(function(child)
+                    task.wait(0.5) -- Tunggu spawn sempurna
+                    if child.Name == "RenderedBrainrot" then
+                        setupPrompt(child)
+                    end
+                end)
+            end
+        end
+    else
+        -- Matikan semua koneksi monitor
+        for name, conn in pairs(ftConnections) do
+            conn:Disconnect()
+        end
+        ftConnections = {}
+    end
 end)
 
 --========================
--- GUI Systems (Drag/Min/Close)
+-- GUI Systems (Drag/Min/Close) [cite: 9]
 --========================
 local dragging, dragStart, startPos
 Topbar.InputBegan:Connect(function(input)
@@ -359,8 +363,8 @@ Close.MouseButton1Click:Connect(function()
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
 	for _, c in pairs(ESP.connections) do if c then c:Disconnect() end end
-	for _, c in pairs(fastTakeConns) do if c then c:Disconnect() end end
+    for _, c in pairs(ftConnections) do if c then c:Disconnect() end end
 	ScreenGui:Destroy()
 end)
 
-print("✅ Dj Hub Loaded - Fast Take Integrated!")
+print("✅ Dj Hub Loaded - TakePrompt Fixed!")
