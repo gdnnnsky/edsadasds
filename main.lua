@@ -1,4 +1,4 @@
-sdadasda
+jimhhhhhhh
 --// Features: Scrollable UI, Stable Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
@@ -511,10 +511,6 @@ Minimize.MouseButton1Click:Connect(function()
 end)
 
 Close.MouseButton1Click:Connect(function()
-    -- ... kode yang sudah ada ...
-    for _, conn in pairs(fastTakeConn) do if conn then conn:Disconnect() end end
-    ScreenGui:Destroy()
-end)
 	if pConn then pConn:Disconnect() end
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
