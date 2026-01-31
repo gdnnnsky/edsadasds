@@ -1,4 +1,5 @@
 --// Dj Hub - Premium v2 (Mobile Friendly & Minimalist UI)
+--// Credits: Dj Hub Team
 --// Features: Platform, Noclip, ESP, Wall Remover, Fast Take (Instant)
 
 local Players = game:GetService("Players")
@@ -19,7 +20,7 @@ local function pickGuiParent()
 	return nil
 end
 
-local parent = pickGuiParent() [cite: 1]
+local parent = pickGuiParent()
 if not parent then return end
 
 pcall(function()
@@ -53,7 +54,7 @@ local function makeDraggable(gui, handle)
 			gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
-end [cite: 9]
+end
 
 --========================
 -- Main GUI Components
@@ -81,19 +82,19 @@ makeDraggable(MinBox, MinBox)
 -- Main Window
 local Window = Instance.new("Frame")
 Window.Name = "Window"
-Window.Size = UDim2.new(0, 380, 0, 450)
-Window.Position = UDim2.new(0.5, -190, 0.5, -225)
+Window.Size = UDim2.new(0, 380, 0, 420)
+Window.Position = UDim2.new(0.5, -190, 0.5, -210)
 Window.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Window.BackgroundTransparency = 0.4 -- Transparan setengah 
+Window.BackgroundTransparency = 0.5 -- Transparan setengah
 Window.BorderSizePixel = 0
 Window.Parent = ScreenGui
 Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 12)
 
 local Topbar = Instance.new("Frame")
-Topbar.Size = UDim2.new(1, 0, 0, 40)
+Topbar.Size = UDim2.new(1, 0, 0, 45)
 Topbar.BackgroundTransparency = 1
 Topbar.Parent = Window
-makeDraggable(Window, Topbar) [cite: 9]
+makeDraggable(Window, Topbar)
 
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -80, 1, 0)
@@ -101,15 +102,16 @@ Title.Position = UDim2.new(0, 15, 0, 0)
 Title.Text = "Dj Hub Premium"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
+Title.TextSize = 18
 Title.BackgroundTransparency = 1
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Topbar
 
 local MinBtn = Instance.new("TextButton")
-MinBtn.Size = UDim2.new(0, 30, 0, 30)
-MinBtn.Position = UDim2.new(1, -40, 0, 5)
+MinBtn.Size = UDim2.new(0, 32, 0, 32)
+MinBtn.Position = UDim2.new(1, -45, 0, 6)
 MinBtn.Text = "-"
+MinBtn.Font = Enum.Font.GothamBold
 MinBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MinBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 MinBtn.Parent = Topbar
@@ -117,18 +119,17 @@ Instance.new("UICorner", MinBtn).CornerRadius = UDim.new(0, 8)
 
 -- Scrolling Content
 local Scroll = Instance.new("ScrollingFrame")
-Scroll.Size = UDim2.new(1, -20, 1, -60)
-Scroll.Position = UDim2.new(0, 10, 0, 50)
+Scroll.Size = UDim2.new(1, -20, 1, -70)
+Scroll.Position = UDim2.new(0, 10, 0, 60)
 Scroll.BackgroundTransparency = 1
 Scroll.BorderSizePixel = 0
 Scroll.ScrollBarThickness = 2
-Scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 Scroll.Parent = Window
 
 local UIList = Instance.new("UIListLayout")
 UIList.Parent = Scroll
-UIList.Padding = UDim.new(0, 10)
+UIList.Padding = UDim.new(0, 12)
 UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 --========================
@@ -143,16 +144,16 @@ local function createFeature(text, callback)
 	local Label = Instance.new("TextLabel")
 	Label.Size = UDim2.new(0.7, 0, 1, 0)
 	Label.Text = text
-	Label.TextColor3 = Color3.fromRGB(220, 220, 220)
-	Label.Font = Enum.Font.Gotham
-	Label.TextSize = 14
+	Label.TextColor3 = Color3.fromRGB(230, 230, 230)
+	Label.Font = Enum.Font.GothamMedium
+	Label.TextSize = 15
 	Label.BackgroundTransparency = 1
 	Label.TextXAlignment = Enum.TextXAlignment.Left
 	Label.Parent = Frame
 
 	local ToggleBG = Instance.new("TextButton")
-	ToggleBG.Size = UDim2.new(0, 45, 0, 22)
-	ToggleBG.Position = UDim2.new(1, -50, 0.5, -11)
+	ToggleBG.Size = UDim2.new(0, 48, 0, 24)
+	ToggleBG.Position = UDim2.new(1, -55, 0.5, -12)
 	ToggleBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 	ToggleBG.Text = ""
 	ToggleBG.Parent = Frame
@@ -160,9 +161,9 @@ local function createFeature(text, callback)
 	corner.CornerRadius = UDim.new(1, 0)
 
 	local Dot = Instance.new("Frame")
-	Dot.Size = UDim2.new(0, 16, 0, 16)
-	Dot.Position = UDim2.new(0, 3, 0.5, -8)
-	Dot.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+	Dot.Size = UDim2.new(0, 18, 0, 18)
+	Dot.Position = UDim2.new(0, 3, 0.5, -9)
+	Dot.BackgroundColor3 = Color3.fromRGB(220, 220, 220)
 	Dot.Parent = ToggleBG
 	Instance.new("UICorner", Dot).CornerRadius = UDim.new(1, 0)
 
@@ -170,20 +171,21 @@ local function createFeature(text, callback)
 	ToggleBG.MouseButton1Click:Connect(function()
 		enabled = not enabled
 		ToggleBG.BackgroundColor3 = enabled and Color3.fromRGB(230, 126, 34) or Color3.fromRGB(60, 60, 60)
-		Dot:TweenPosition(enabled and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.2, true)
+		Dot:TweenPosition(enabled and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9), "Out", "Quad", 0.2, true)
 		callback(enabled)
-	end) [cite: 8]
+	end)
 end
 
 --========================
 -- Features Implementation
 --========================
 
--- 1. Platform [cite: 5]
+-- 1. Platform
 local pPart, pConn, lastY = nil, nil, 0
 createFeature("Stable Platform", function(state)
 	if state then
 		pPart = Instance.new("Part", workspace)
+		pPart.Name = "DjPlatform"
 		pPart.Size, pPart.Anchored, pPart.Transparency = Vector3.new(15, 0.5, 15), true, 0.5
 		pPart.Material, pPart.Color = Enum.Material.ForceField, Color3.fromRGB(0, 255, 255)
 		if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then lastY = lp.Character.HumanoidRootPart.Position.Y - 3.2 end
@@ -195,14 +197,14 @@ createFeature("Stable Platform", function(state)
 			end
 		end)
 	else
-		if pConn then pConn:Disconnect() end
-		if pPart then pPart:Destroy() end
+		if pConn then pConn:Disconnect() pConn = nil end
+		if pPart then pPart:Destroy() pPart = nil end
 	end
 end)
 
 -- 2. Noclip
 local noclipConn = nil
-createFeature("Noclip (Walls Pass)", function(state)
+createFeature("Noclip (Pass Walls)", function(state)
 	if state then
 		noclipConn = RunService.Stepped:Connect(function()
 			if lp.Character then
@@ -210,48 +212,89 @@ createFeature("Noclip (Walls Pass)", function(state)
 			end
 		end)
 	else
-		if noclipConn then noclipConn:Disconnect() end
+		if noclipConn then noclipConn:Disconnect() noclipConn = nil end
 	end
 end)
 
--- 3. ESP System (Generic) 
-local function toggleEsp(rarity, state)
-	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild(rarity)
+-- 3. ESP System (Generic)
+local ESP_Markers = {}
+local function clearEsp(rarity)
+    for obj, folderName in pairs(ESP_Markers) do
+        if folderName == rarity and obj:FindFirstChild("Highlight") then obj.Highlight:Destroy() end
+    end
+end
+
+createFeature("ESP Divine", function(state)
+	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild("Divine")
 	if state and folder then
 		for _, v in pairs(folder:GetChildren()) do
 			if v.Name == "RenderedBrainrot" then
 				local hl = Instance.new("Highlight", v)
-				hl.FillColor = (rarity == "Divine" and Color3.new(1,0.8,0)) or Color3.new(1,1,1)
+				hl.FillColor = Color3.fromRGB(255, 215, 0)
+                ESP_Markers[v] = "Divine"
 			end
 		end
+	else
+		clearEsp("Divine")
 	end
-end
-createFeature("ESP Divine", function(s) toggleEsp("Divine", s) end)
-createFeature("ESP Common", function(s) toggleEsp("Common", s) end)
+end)
 
--- 4. Fast Take (Instant) 
-local ftConn = nil
-createFeature("Fast Take (Instant)", function(state)
-	if state then
-		ftConn = workspace.ActiveBrainrots.DescendantAdded:Connect(function(d)
-			if d.Name == "TakePrompt" then d.HoldDuration = 0 end
-		end)
-		for _, d in pairs(workspace.ActiveBrainrots:GetDescendants()) do
-			if d.Name == "TakePrompt" then d.HoldDuration = 0 end
+createFeature("ESP Common", function(state)
+	local folder = workspace:FindFirstChild("ActiveBrainrots") and workspace.ActiveBrainrots:FindFirstChild("Common")
+	if state and folder then
+		for _, v in pairs(folder:GetChildren()) do
+			if v.Name == "RenderedBrainrot" then
+				local hl = Instance.new("Highlight", v)
+				hl.FillColor = Color3.fromRGB(200, 200, 200)
+                ESP_Markers[v] = "Common"
+			end
 		end
+	else
+		clearEsp("Common")
+	end
+end)
+
+-- 4. Delete Walls
+createFeature("Delete VIP Walls", function(state)
+	if state then
+		local walls = workspace:FindFirstChild("VIPWalls") or workspace:FindFirstChild("Wallses")
+		if walls then for _, v in pairs(walls:GetChildren()) do v:Destroy() end end
+	end
+end)
+
+-- 5. Fast Take (Instant)
+local ftConn = nil
+local function setupPrompt(p)
+    if p:IsA("ProximityPrompt") and p.Name == "TakePrompt" then
+        p.HoldDuration = 0
+        p.MaxActivationDistance = 20
+    end
+end
+
+createFeature("Fast Take (Instant)", function(state)
+	local activeFolder = workspace:FindFirstChild("ActiveBrainrots")
+	if not activeFolder then return end
+
+	if state then
+		for _, d in pairs(activeFolder:GetDescendants()) do setupPrompt(d) end
+		ftConn = activeFolder.DescendantAdded:Connect(function(d)
+			task.wait(0.1)
+			setupPrompt(d)
+		end)
 	elseif ftConn then
 		ftConn:Disconnect()
+		ftConn = nil
 	end
 end)
 
 --========================
--- Minimize & Close Logic
+-- Minimize Logic
 --========================
 MinBtn.MouseButton1Click:Connect(function()
 	Window.Visible = false
 	MinBox.Visible = true
 	MinBox.Position = Window.Position
-end) [cite: 3]
+end)
 
 MinBox.MouseButton1Click:Connect(function()
 	Window.Visible = true
@@ -259,4 +302,4 @@ MinBox.MouseButton1Click:Connect(function()
 	Window.Position = MinBox.Position
 end)
 
-print("✅ Dj Hub v2 Loaded - Aesthetic & Mobile Ready")
+print("✅ Dj Hub v2 Fully Loaded - Aesthetic & Fixed!")
