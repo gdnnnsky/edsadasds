@@ -1,4 +1,4 @@
---// Dj Hub (Final Stable Version - Fixed Fast Take)
+--ffffffffffffffffff
 --// Features: Scrollable UI, Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
@@ -8,7 +8,7 @@ local RunService = game:GetService("RunService")
 local lp = Players.LocalPlayer
 
 --========================
--- GUI Parent Setup [cite: 1]
+-- GUI Parent Setup
 --========================
 local function pickGuiParent()
 	if lp then
@@ -29,7 +29,7 @@ pcall(function()
 end)
 
 --========================
--- Build Main GUI [cite: 2, 3]
+-- Build Main GUI
 --========================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DjWindowGUI"
@@ -111,7 +111,7 @@ UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
 Instance.new("UIPadding", Scroll).PaddingTop = UDim.new(0, 5)
 
--- Helper Button Function [cite: 4]
+-- Helper Button Function
 local function createButton(text, color, order)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0, 380, 0, 40)
@@ -138,7 +138,7 @@ local DelWallsBtn      = createButton("Delete Walls (Safe)", Color3.fromRGB(180,
 local FastTakeBtn     = createButton("Fast Take: OFF", Color3.fromRGB(230, 126, 34), 7)
 
 --========================
--- 1. PLATFORM LOGIC [cite: 5, 6]
+-- 1. PLATFORM LOGIC
 --========================
 local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
@@ -202,7 +202,7 @@ NoclipBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- 3. ESP SYSTEM [cite: 7, 8]
+-- 3. ESP SYSTEM
 --========================
 local ESP = { enabled = {}, connections = {}, markers = {} }
 
@@ -278,24 +278,13 @@ end)
 -- 5. FAST TAKE LOGIC (BASED ON IMAGE STRUCTURE)
 --========================
 local fastTakeEnabled = false
-local ftConnections = {}
+local ftConnection = nil
 
-local function setupPrompt(renderedBrainrot)
-    if not renderedBrainrot:IsA("Model") then return end
-    
-    -- Struktur: ActiveBrainrots -> Folder -> RenderedBrainrot -> [BrainrotName] -> Root -> TakePrompt
-    for _, brainrotModel in pairs(renderedBrainrot:GetChildren()) do
-        if brainrotModel:IsA("Model") then
-            local root = brainrotModel:FindFirstChild("Root")
-            if root then
-                -- Perbaikan Nama: TakePrompt (dengan 'p' dan 't' sesuai gambar)
-                local prompt = root:FindFirstChild("TakePrompt") or root:FindFirstChildWhichIsA("ProximityPrompt")
-                if prompt then
-                    prompt.HoldDuration = 0
-                    prompt.MaxActivationDistance = 15
-                end
-            end
-        end
+-- Fungsi untuk mengubah HoldDuration menjadi 0
+local function applyFastTake(prompt)
+    if prompt:IsA("ProximityPrompt") and prompt.Name == "TakePrompt" then
+        prompt.HoldDuration = 0
+        prompt.MaxActivationDistance = 25 -- Jarak lebih jauh agar mudah diambil
     end
 end
 
@@ -308,35 +297,29 @@ FastTakeBtn.MouseButton1Click:Connect(function()
     if not activeFolder then return end
 
     if fastTakeEnabled then
-        -- 1. Scan folder kelangkaan (Common, Celestial, dll)
-        for _, rarityFolder in pairs(activeFolder:GetChildren()) do
-            if rarityFolder:IsA("Folder") then
-                -- Scan RenderedBrainrot yang sudah ada
-                for _, rb in pairs(rarityFolder:GetChildren()) do
-                    if rb.Name == "RenderedBrainrot" then
-                        setupPrompt(rb)
-                    end
-                end
-                -- 2. Pantau spawn baru di folder kelangkaan tersebut
-                ftConnections[rarityFolder.Name] = rarityFolder.ChildAdded:Connect(function(child)
-                    task.wait(0.5) -- Tunggu spawn sempurna
-                    if child.Name == "RenderedBrainrot" then
-                        setupPrompt(child)
-                    end
-                end)
+        -- 1. Scan semua prompt yang sudah ada saat ini menggunakan Descendants
+        for _, descendant in pairs(activeFolder:GetDescendants()) do
+            applyFastTake(descendant)
+        end
+        
+        -- 2. Pantau semua prompt baru yang muncul di folder ActiveBrainrots (apa pun kelangkaannya)
+        ftConnection = activeFolder.DescendantAdded:Connect(function(desc)
+            if desc.Name == "TakePrompt" then
+                task.wait(0.1) -- Tunggu sebentar agar properti terbaca game
+                applyFastTake(desc)
             end
-        end
+        end)
     else
-        -- Matikan semua koneksi monitor
-        for name, conn in pairs(ftConnections) do
-            conn:Disconnect()
+        -- Matikan pemantauan jika fitur OFF
+        if ftConnection then
+            ftConnection:Disconnect()
+            ftConnection = nil
         end
-        ftConnections = {}
     end
 end)
 
 --========================
--- GUI Systems (Drag/Min/Close) [cite: 9]
+-- GUI Systems (Drag/Min/Close)
 --========================
 local dragging, dragStart, startPos
 Topbar.InputBegan:Connect(function(input)
@@ -363,8 +346,8 @@ Close.MouseButton1Click:Connect(function()
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
 	for _, c in pairs(ESP.connections) do if c then c:Disconnect() end end
-    for _, c in pairs(ftConnections) do if c then c:Disconnect() end end
+    if ftConnection then ftConnection:Disconnect() end
 	ScreenGui:Destroy()
 end)
 
-print("✅ Dj Hub Loaded - TakePrompt Fixed!")
+print("✅ Dj Hub Loaded - Enjoy!")
