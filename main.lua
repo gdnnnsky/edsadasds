@@ -155,11 +155,12 @@ local EspDivineBtn    = createButton("ESP Divine: OFF", nil, 4)
 local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 5)
 
 --========================
--- 1. PLATFORM LOGIC (NEW)
+-- 1. PLATFORM LOGIC (FIXED)
 --========================
 local platformEnabled = false
 local pPart = nil
 local pConn = nil
+local lastY = 0 -- Untuk mengunci tinggi platform
 
 local function togglePlatform()
 	platformEnabled = not platformEnabled
@@ -168,22 +169,35 @@ local function togglePlatform()
 		PlatformBtn.Text = "Platform: ON"
 		PlatformBtn.BackgroundColor3 = Color3.fromRGB(60, 170, 255)
 		
-		-- Buat Part Lantai
 		pPart = Instance.new("Part")
 		pPart.Name = "DjPlatform"
-		pPart.Size = Vector3.new(12, 1, 12)
+		pPart.Size = Vector3.new(15, 0.5, 15) -- Lebih tipis agar tidak bentrok physics
 		pPart.Anchored = true
-		pPart.Transparency = 0.5 -- 0.5 agar terlihat samar, ganti ke 1 kalau mau total gaib
+		pPart.Transparency = 0.5
 		pPart.Color = Color3.fromRGB(0, 255, 255)
 		pPart.Material = Enum.Material.ForceField
 		pPart.Parent = workspace
 		
-		-- Loop update posisi
-		pConn = RunService.RenderStepped:Connect(function()
-			if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+		-- Ambil posisi awal saat diaktifkan
+		if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+			lastY = lp.Character.HumanoidRootPart.Position.Y - 3.2
+		end
+		
+		pConn = RunService.PostSimulation:Connect(function() -- Menggunakan PostSimulation agar lebih stabil
+			if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid") then
 				local hrp = lp.Character.HumanoidRootPart
-				-- Letakkan part di bawah kaki (sekitar 3.5 unit dari tengah HRP)
-				pPart.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y - 3.5, hrp.Position.Z)
+				local hum = lp.Character.Humanoid
+				
+				local targetY = hrp.Position.Y - 3.2
+				
+				-- LOGIC FIX: 
+				-- Jika player sedang melompat atau jatuh (Freefall), platform ikut naik/turun.
+				-- Jika player menyentuh sesuatu (Landed), platform diam agar tidak mendorong ke atas.
+				if hum.FloorMaterial == Enum.Material.Air then
+					lastY = targetY
+				end
+				
+				pPart.CFrame = CFrame.new(hrp.Position.X, lastY, hrp.Position.Z)
 			end
 		end)
 	else
@@ -194,8 +208,6 @@ local function togglePlatform()
 		if pPart then pPart:Destroy() pPart = nil end
 	end
 end
-
-PlatformBtn.MouseButton1Click:Connect(togglePlatform)
 
 --========================
 -- 2. NOCLIP LOGIC
