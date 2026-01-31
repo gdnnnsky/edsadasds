@@ -1,5 +1,5 @@
---// Dj Hub (Final Version + God Mode)
---// Features: God Mode, Platform, Noclip, Multi-ESP, Wall Remover
+--// Dj Hub (Ultimate God Mode Version)
+--// Features: Ultimate God, Stable Platform, Noclip, ESP, Wall Remover
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -36,7 +36,7 @@ Window.Active = true
 Window.Parent = ScreenGui
 Instance.new("UICorner", Window).CornerRadius = UDim.new(0, 10)
 
--- Topbar & Title
+-- Topbar
 local Topbar = Instance.new("Frame")
 Topbar.Size = UDim2.new(1, 0, 0, 38)
 Topbar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -47,7 +47,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -120, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Dj Hub - GOD MODE Update"
+Title.Text = "Dj Hub - ULTIMATE GOD"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamSemibold
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -90,51 +90,62 @@ end
 --========================
 -- Buttons
 --========================
-local GodBtn         = createButton("God Mode: OFF", Color3.fromRGB(200, 50, 50), 0)
+local GodBtn         = createButton("ULTIMATE GOD: OFF", Color3.fromRGB(200, 50, 50), 0)
 local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
 local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
 local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(180, 150, 0), 3)
 local DelWallsBtn     = createButton("Delete Walls", Color3.fromRGB(180, 100, 40), 6)
 
 --========================
--- 1. GOD MODE LOGIC (NEW)
+-- 1. ULTIMATE GOD LOGIC
 --========================
 local godModeOn = false
-local godConn = nil
+local godConn1, godConn2 = nil, nil
 
 GodBtn.MouseButton1Click:Connect(function()
 	godModeOn = not godModeOn
-	GodBtn.Text = "God Mode: " .. (godModeOn and "ON" or "OFF")
+	GodBtn.Text = "ULTIMATE GOD: " .. (godModeOn and "ON" or "OFF")
 	GodBtn.BackgroundColor3 = godModeOn and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
 
 	if godModeOn then
-		godConn = RunService.Stepped:Connect(function()
+		-- LOOP 1: Mengunci Health & State (Fast Loop)
+		godConn1 = RunService.Heartbeat:Connect(function()
 			if lp.Character then
 				local hum = lp.Character:FindFirstChildOfClass("Humanoid")
 				if hum then
-					-- Mencoba mengunci health (Hanya bekerja di beberapa game)
-					hum.Health = hum.MaxHealth 
-					-- Mencegah state mati secara lokal
+					hum.Health = hum.MaxHealth
 					hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 				end
-				-- Mematikan TouchInterest pada objek berbahaya di sekitar (Eksperimental)
-				for _, part in pairs(lp.Character:GetDescendants()) do
-					if part:IsA("BasePart") then
-						part.CanTouch = not godModeOn -- Mematikan deteksi sentuhan karakter
-					end
+				-- Mematikan Touch karakter sendiri
+				for _, v in pairs(lp.Character:GetDescendants()) do
+					if v:IsA("BasePart") then v.CanTouch = false end
+				end
+			end
+		end)
+
+		-- LOOP 2: Menghapus "Sensor Damage" dari semua objek di map secara lokal
+		godConn2 = RunService.Stepped:Connect(function()
+			for _, part in pairs(workspace:GetDescendants()) do
+				if part:IsA("TouchTransmitter") then
+					-- Jika ini sensor damage dari objek luar, kita hapus secara paksa
+					part:Destroy()
 				end
 			end
 		end)
 	else
-		if godConn then godConn:Disconnect() end
+		if godConn1 then godConn1:Disconnect() end
+		if godConn2 then godConn2:Disconnect() end
 		if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
 			lp.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+			for _, v in pairs(lp.Character:GetDescendants()) do
+				if v:IsA("BasePart") then v.CanTouch = true end
+			end
 		end
 	end
 end)
 
 --========================
--- 2. PLATFORM LOGIC
+-- 2. PLATFORM LOGIC (STABLE)
 --========================
 local platformEnabled, pPart, pConn, lastY = false, nil, nil, 0
 PlatformBtn.MouseButton1Click:Connect(function()
@@ -184,16 +195,17 @@ NoclipBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- Lain-lain (Wall & GUI)
+-- 4. DELETE WALLS
 --========================
 DelWallsBtn.MouseButton1Click:Connect(function()
 	local w = workspace:FindFirstChild("VIPWalls") or workspace:FindFirstChild("Wallses")
 	if w then for _, v in pairs(w:GetChildren()) do v:Destroy() end end
 end)
 
+--========================
+-- GUI Systems
+--========================
 Close.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
-
--- Dragging logic
 local d, ds, sp
 Topbar.InputBegan:Connect(function(i)
 	if i.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -208,4 +220,4 @@ UIS.InputChanged:Connect(function(i)
 	end
 end)
 
-print("✅ Dj Hub Loaded with God Mode.")
+print("✅ Dj Hub Loaded with Ultimate God Mode.")
