@@ -1,5 +1,5 @@
---// Dj Hub (Absolute God Mode Version)
---// Fitur: God Mode Absolut, Platform, Noclip, ESP, Wall Remover
+--// Dj Hub (Absolute God + Infinite Health Lock)
+--// Features: Infinite Health, God Mode, Platform, Noclip, ESP, Wall Remover
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -47,7 +47,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -120, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Dj Hub - ABSOLUTE GOD"
+Title.Text = "Dj Hub - INFINITE GOD"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.GothamSemibold
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -90,25 +90,25 @@ end
 --========================
 -- Buttons
 --========================
-local GodBtn         = createButton("ABSOLUTE GOD: OFF", Color3.fromRGB(200, 50, 50), 0)
+local GodBtn         = createButton("INFINITE GOD: OFF", Color3.fromRGB(200, 50, 50), 0)
 local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
 local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
-local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(180, 150, 0), 3)
-local DelWallsBtn     = createButton("Delete Walls", Color3.fromRGB(180, 100, 40), 6)
+local DelWallsBtn     = createButton("Delete Walls", Color3.fromRGB(180, 100, 40), 5)
 
 --========================
--- 1. ABSOLUTE GOD LOGIC (ANTI-RESET METODE)
+-- 1. INFINITE GOD LOGIC
 --========================
 local absoluteGod = false
 local godLoop = nil
+local godLoop2 = nil
 
 GodBtn.MouseButton1Click:Connect(function()
 	absoluteGod = not absoluteGod
-	GodBtn.Text = "ABSOLUTE GOD: " .. (absoluteGod and "ON" or "OFF")
+	GodBtn.Text = "INFINITE GOD: " .. (absoluteGod and "ON" or "OFF")
 	GodBtn.BackgroundColor3 = absoluteGod and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
 
 	if absoluteGod then
-		-- Hapus semua sensor damage yang ada di map saat ini
+		-- Hapus sensor damage yang sudah ada
 		for _, v in pairs(workspace:GetDescendants()) do
 			if v:IsA("TouchTransmitter") then v:Destroy() end
 		end
@@ -117,18 +117,18 @@ GodBtn.MouseButton1Click:Connect(function()
 			if lp.Character then
 				local hum = lp.Character:FindFirstChildOfClass("Humanoid")
 				if hum then
-					-- Mengunci nyawa agar tidak berkurang sama sekali
-					hum.Health = hum.MaxHealth
-					-- Menonaktifkan deteksi "Mati"
-					hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+					-- INFINITE HEALTH LOCK
+					hum.MaxHealth = math.huge -- Set max health tak terbatas (visual)
+					hum.Health = math.huge    -- Isi darah sampai penuh tak terbatas
 					
-					-- Anti-Kematian Paksa: Jika server memaksa nyawa ke 0, kita tarik ke atas lagi
-					if hum.Health <= 0 then
-						hum.Health = hum.MaxHealth
+					-- Anti State Mati
+					hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+					if hum:GetState() == Enum.HumanoidStateType.Dead then
+						hum:ChangeState(Enum.HumanoidStateType.Running)
 					end
 				end
 				
-				-- Membuat seluruh tubuh kebal terhadap sentuhan objek luar
+				-- Mematikan CanTouch Karakter agar tidak bisa dideteksi objek damage
 				for _, part in pairs(lp.Character:GetDescendants()) do
 					if part:IsA("BasePart") then
 						part.CanTouch = false
@@ -137,7 +137,7 @@ GodBtn.MouseButton1Click:Connect(function()
 			end
 		end)
 		
-		-- Loop kedua khusus menghapus sensor damage baru yang muncul
+		-- Hapus otomatis objek damage baru yang muncul
 		godLoop2 = workspace.DescendantAdded:Connect(function(v)
 			if absoluteGod and v:IsA("TouchTransmitter") then
 				v:Destroy()
@@ -147,7 +147,10 @@ GodBtn.MouseButton1Click:Connect(function()
 		if godLoop then godLoop:Disconnect() end
 		if godLoop2 then godLoop2:Disconnect() end
 		if lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") then
-			lp.Character.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+			local hum = lp.Character.Humanoid
+			hum.MaxHealth = 100
+			hum.Health = 100
+			hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
 			for _, part in pairs(lp.Character:GetDescendants()) do
 				if part:IsA("BasePart") then part.CanTouch = true end
 			end
@@ -214,7 +217,7 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- GUI Systems
+-- GUI Systems (Drag & Close)
 --========================
 Close.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 local d, ds, sp
@@ -230,3 +233,5 @@ UIS.InputChanged:Connect(function(i)
 		Window.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X, sp.Y.Scale, sp.Y.Offset + delta.Y)
 	end
 end)
+
+print("✅ Infinite God Mode Loaded.")
