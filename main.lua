@@ -1,4 +1,4 @@
---// Dj Hub (SAFE untuk game kamu sendiri): Draggable GUI + Minimize + Close + ESP + Wall Remover
+--// Dj Hub (Updated): +Divine ESP
 --// LocalScript di StarterPlayerScripts / StarterGui
 
 local Players = game:GetService("Players")
@@ -43,8 +43,9 @@ ScreenGui.Parent = parent
 
 local Window = Instance.new("Frame")
 Window.Name = "Window"
-Window.Size = UDim2.new(0, 420, 0, 300) -- Sedikit diperbesar tingginya
-Window.Position = UDim2.new(0.5, -210, 0.5, -150)
+-- [UPDATE] Tinggi diperbesar dari 300 ke 350 untuk muat tombol baru
+Window.Size = UDim2.new(0, 420, 0, 350) 
+Window.Position = UDim2.new(0.5, -210, 0.5, -175)
 Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Window.BorderSizePixel = 0
 Window.Active = true
@@ -76,7 +77,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -120, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Dj Hub - Map Test"
+Title.Text = "Dj Hub - Divine Update"
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamSemibold
 Title.TextColor3 = Color3.fromRGB(235, 235, 235)
@@ -117,7 +118,7 @@ local Info = Instance.new("TextLabel")
 Info.Size = UDim2.new(1, -24, 0, 40)
 Info.Position = UDim2.new(0, 12, 0, 12)
 Info.BackgroundTransparency = 1
-Info.Text = "Menu Options"
+Info.Text = "Brainrot ESP & Tools"
 Info.TextSize = 14
 Info.Font = Enum.Font.Gotham
 Info.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -150,11 +151,24 @@ EspCommonBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 EspCommonBtn.Parent = Content
 Instance.new("UICorner", EspCommonBtn).CornerRadius = UDim.new(0, 8)
 
--- Button 3: Delete Walls (NEW)
+-- Button 3: Divine (NEW)
+local EspDivineBtn = Instance.new("TextButton")
+EspDivineBtn.Size = UDim2.new(0, 180, 0, 34)
+EspDivineBtn.Position = UDim2.new(0, 12, 0, 138) -- Posisi baru di bawah Common
+EspDivineBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+EspDivineBtn.BorderSizePixel = 0
+EspDivineBtn.Text = "ESP Divine: OFF"
+EspDivineBtn.TextSize = 14
+EspDivineBtn.Font = Enum.Font.GothamSemibold
+EspDivineBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+EspDivineBtn.Parent = Content
+Instance.new("UICorner", EspDivineBtn).CornerRadius = UDim.new(0, 8)
+
+-- Button 4: Delete Walls (Digeser ke bawah)
 local DelWallsBtn = Instance.new("TextButton")
 DelWallsBtn.Size = UDim2.new(0, 180, 0, 34)
-DelWallsBtn.Position = UDim2.new(0, 12, 0, 138)
-DelWallsBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 40) -- Warna beda dikit (Orange)
+DelWallsBtn.Position = UDim2.new(0, 12, 0, 182) -- Digeser ke 182
+DelWallsBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 40)
 DelWallsBtn.BorderSizePixel = 0
 DelWallsBtn.Text = "Delete Walls (Safe)"
 DelWallsBtn.TextSize = 14
@@ -221,8 +235,9 @@ end)
 -- ESP Engine
 --========================
 local ESP = {
-	enabled = { Celestial = false, Common = false },
-	connections = { Celestial = nil, Common = nil },
+	-- [UPDATE] Menambahkan Divine ke table
+	enabled = { Celestial = false, Common = false, Divine = false },
+	connections = { Celestial = nil, Common = nil, Divine = nil },
 	markers = {}
 }
 
@@ -259,6 +274,12 @@ local function addMarker(rendered, labelPrefix)
 	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	hl.Adornee = rendered
 	hl.Parent = rendered
+    
+    -- Opsional: Warna beda untuk setiap tipe (bisa disesuaikan)
+    if labelPrefix == "Divine" then
+        hl.FillColor = Color3.fromRGB(255, 215, 0) -- Emas untuk Divine
+        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+    end
 
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DjESP_BB"
@@ -276,6 +297,9 @@ local function addMarker(rendered, labelPrefix)
 	txt.TextColor3 = Color3.fromRGB(255, 255, 255)
 	txt.TextStrokeTransparency = 0.6
 	txt.Text = ("%s: %s"):format(labelPrefix, modelName)
+	if labelPrefix == "Divine" then
+		txt.TextColor3 = Color3.fromRGB(255, 220, 50) -- Text Emas untuk Divine
+	end
 	txt.Parent = bb
 
 	local ac = rendered.AncestryChanged:Connect(function(_, parentNow)
@@ -337,46 +361,49 @@ EspCommonBtn.MouseButton1Click:Connect(function()
 	EspCommonBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
 end)
 
+-- [UPDATE] Button Hook: DIVINE
+EspDivineBtn.MouseButton1Click:Connect(function()
+	local newState = not ESP.enabled.Divine
+	setEsp("Divine", "Divine", "Divine", newState)
+	EspDivineBtn.Text = "ESP Divine: " .. (newState and "ON" or "OFF")
+	EspDivineBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+end)
+
 --========================
--- Button Hook: DELETE WALLS (NEW FEATURE)
+-- Button Hook: DELETE WALLS
 --========================
 local wallsDeleted = false
 
 DelWallsBtn.MouseButton1Click:Connect(function()
 	if wallsDeleted then
-		-- Opsional: Kalau sudah dihapus, kasih notif aja karena tidak bisa dikembalikan tanpa rejoin
 		DelWallsBtn.Text = "Already Deleted!"
 		wait(1)
 		DelWallsBtn.Text = "Walls Deleted (Rejoin to fix)"
 		return
 	end
 
-	-- Cari Model "Wallses" di workspace
 	local wallModel = workspace:FindFirstChild("VIPWalls")
 	
 	if wallModel then
 		local count = 0
-		-- Loop semua anak di dalam Wallses
 		for _, child in ipairs(wallModel:GetChildren()) do
-			-- Cek nama part
 			if child.Name == "VIP" or child.Name == "VIP_PLUS" then
-				child:Destroy() -- Hapus part
+				child:Destroy()
 				count = count + 1
 			end
 		end
 		
 		if count > 0 then
 			wallsDeleted = true
-			DelWallsBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60) -- Merah (Destructive action)
+			DelWallsBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
 			DelWallsBtn.Text = "Deleted " .. count .. " blocks!"
 		else
 			DelWallsBtn.Text = "No blocks found inside Wallses"
 		end
 	else
-		DelWallsBtn.Text = "Model 'Wallses' not found!"
+		DelWallsBtn.Text = "Model 'VIPWalls' not found!"
 	end
 	
-	-- Kembalikan teks status setelah beberapa detik jika gagal/kosong
 	if not wallsDeleted then
 		wait(2)
 		DelWallsBtn.Text = "Delete Walls (Safe)"
@@ -392,4 +419,4 @@ Close.MouseButton1Click:Connect(function()
 	ScreenGui:Destroy()
 end)
 
-print("✅ GUI Updated with Wall Remover.")
+print("✅ GUI Updated with Divine ESP & Wall Remover.")
