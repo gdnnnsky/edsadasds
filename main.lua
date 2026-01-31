@@ -129,61 +129,16 @@ end
 --========================
 -- Feature Buttons
 --========================
-local FastTakeBtn    = createButton("Fast Take: OFF", Color3.fromRGB(200, 50, 50), 0)
-local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
-local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
-local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165, 32), 3)
-local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 4)
-local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 5)
-local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 6)
+local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
+local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
+local FastTakeBtn    = createButton("Fast Take: OFF", Color3.fromRGB(180, 60, 120), 3)
+local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165, 32), 4)
+local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 5)
+local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 6)
+local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 7)
 
 --========================
--- 0. FAST TAKE LOGIC
---========================
-local fastTakeEnabled = false
-local fastTakeConn = nil
-
-local function applyFastTake(obj)
-	-- Mencari path: ActiveBrainrots -> rarity -> RenderedBrainrot -> BrainrotName -> Root -> TakePromt
-	if obj.Name == "RenderedBrainrot" then
-		task.spawn(function()
-			-- Tunggu sampai struktur Root dan TakePromt muncul
-			local prompt = obj:FindFirstChild("TakePromt", true) 
-			if prompt and prompt:IsA("ProximityPrompt") then
-				prompt.HoldDuration = 0
-				prompt.MaxActivationDistance = 15
-			end
-		end)
-	end
-end
-
-FastTakeBtn.MouseButton1Click:Connect(function()
-	fastTakeEnabled = not fastTakeEnabled
-	FastTakeBtn.Text = "Fast Take: " .. (fastTakeEnabled and "ON" or "OFF")
-	FastTakeBtn.BackgroundColor3 = fastTakeEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
-
-	local folder = workspace:FindFirstChild("ActiveBrainrots")
-	if fastTakeEnabled and folder then
-		-- Apply ke yang sudah ada
-		for _, rarity in pairs(folder:GetChildren()) do
-			for _, item in pairs(rarity:GetChildren()) do
-				applyFastTake(item)
-			end
-		end
-		-- Loop untuk item baru yang muncul
-		fastTakeConn = folder.DescendantAdded:Connect(function(descendant)
-			if descendant.Name == "TakePromt" and descendant:IsA("ProximityPrompt") then
-				descendant.HoldDuration = 0
-				descendant.MaxActivationDistance = 15
-			end
-		end)
-	else
-		if fastTakeConn then fastTakeConn:Disconnect() fastTakeConn = nil end
-	end
-end)
-
---========================
--- 1. PLATFORM LOGIC
+-- 1. PLATFORM LOGIC (STABLE)
 --========================
 local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
@@ -247,7 +202,151 @@ NoclipBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- 3. ESP SYSTEM
+-- 3. FAST TAKE LOGIC
+--========================
+--[[
+	Struktur yang dicari:
+	workspace/
+		ActiveBrainrots/
+			[FolderNama] (Divine, Celestial, Common, dll)/
+				RenderedBrainrot (Model)/
+					[Nama Brainrot] (Model)/
+						Root (Part)/
+							TakePrompt (ProximityPrompt)
+								HoldDuration: 0.5 → 0
+								MaxActivationDistance: 8 → 15
+]]
+
+local fastTakeOn = false
+local fastTakeCache = {} -- simpan original values & connections untuk restore
+local fastTakeChildConn = nil
+
+local FAST_TAKE_HOLD = 0
+local FAST_TAKE_DIST = 15
+local ORIG_HOLD = 0.5
+local ORIG_DIST = 8
+
+-- Cari dan ubah TakePrompt di dalam satu RenderedBrainrot
+local function applyFastTake(renderedModel)
+	if not renderedModel or not renderedModel:IsA("Model") then return end
+	if renderedModel.Name ~= "RenderedBrainrot" then return end
+	if fastTakeCache[renderedModel] then return end -- sudah diproses
+
+	local prompts = {}
+
+	-- Loop semua child model di dalam RenderedBrainrot (misal: "Tim Cheese")
+	for _, brainrotModel in pairs(renderedModel:GetChildren()) do
+		if brainrotModel:IsA("Model") then
+			local root = brainrotModel:FindFirstChild("Root")
+			if root and root:IsA("BasePart") then
+				local takePrompt = root:FindFirstChild("TakePrompt")
+				if takePrompt and takePrompt:IsA("ProximityPrompt") then
+					-- Simpan nilai original sebelum ubah
+					local origData = {
+						prompt = takePrompt,
+						origHold = takePrompt.HoldDuration,
+						origDist = takePrompt.MaxActivationDistance
+					}
+					-- Terapkan nilai Fast Take
+					takePrompt.HoldDuration = FAST_TAKE_HOLD
+					takePrompt.MaxActivationDistance = FAST_TAKE_DIST
+					table.insert(prompts, origData)
+				end
+			end
+		end
+	end
+
+	if #prompts > 0 then
+		fastTakeCache[renderedModel] = prompts
+	end
+end
+
+-- Restore nilai original pada satu RenderedBrainrot
+local function removeFastTake(renderedModel)
+	local prompts = fastTakeCache[renderedModel]
+	if not prompts then return end
+
+	for _, data in pairs(prompts) do
+		pcall(function()
+			if data.prompt and data.prompt.Parent then
+				data.prompt.HoldDuration = data.origHold
+				data.prompt.MaxActivationDistance = data.origDist
+			end
+		end)
+	end
+
+	fastTakeCache[renderedModel] = nil
+end
+
+-- Scan semua folder di ActiveBrainrots dan apply
+local function scanAllBrainrots()
+	local activeBrainrots = workspace:FindFirstChild("ActiveBrainrots")
+	if not activeBrainrots then return end
+
+	for _, folder in pairs(activeBrainrots:GetChildren()) do
+		if folder:IsA("Folder") or folder:IsA("Model") then
+			for _, rendered in pairs(folder:GetChildren()) do
+				applyFastTake(rendered)
+			end
+		end
+	end
+end
+
+-- Listen untuk RenderedBrainrot baru yang masuk (spawn)
+local function startFastTakeListeners()
+	local activeBrainrots = workspace:FindFirstChild("ActiveBrainrots")
+	if not activeBrainrots then return end
+
+	-- Dengarkan ChildAdded di setiap subfolder
+	for _, folder in pairs(activeBrainrots:GetChildren()) do
+		if folder:IsA("Folder") or folder:IsA("Model") then
+			local conn = folder.ChildAdded:Connect(function(child)
+				if fastTakeOn then
+					applyFastTake(child)
+				end
+			end)
+			-- Simpan connection ke cache folder
+			if not fastTakeCache["_folderConns"] then
+				fastTakeCache["_folderConns"] = {}
+			end
+			table.insert(fastTakeCache["_folderConns"], conn)
+		end
+	end
+end
+
+-- Putus semua folder listeners
+local function stopFastTakeListeners()
+	local conns = fastTakeCache["_folderConns"]
+	if conns then
+		for _, c in pairs(conns) do
+			if c then c:Disconnect() end
+		end
+	end
+	fastTakeCache["_folderConns"] = nil
+end
+
+FastTakeBtn.MouseButton1Click:Connect(function()
+	fastTakeOn = not fastTakeOn
+	FastTakeBtn.Text = "Fast Take: " .. (fastTakeOn and "ON" or "OFF")
+	FastTakeBtn.BackgroundColor3 = fastTakeOn and Color3.fromRGB(220, 80, 140) or Color3.fromRGB(180, 60, 120)
+
+	if fastTakeOn then
+		scanAllBrainrots()
+		startFastTakeListeners()
+	else
+		-- Restore semua yang sudah diubah
+		stopFastTakeListeners()
+		for rendered, _ in pairs(fastTakeCache) do
+			if rendered ~= "_folderConns" then
+				removeFastTake(rendered)
+			end
+		end
+		fastTakeCache = {}
+	end
+end)
+
+--========================
+-- 4. ESP SYSTEM
 --========================
 local ESP = { enabled = {}, connections = {}, markers = {} }
 
@@ -261,7 +360,7 @@ end
 
 local function addMarker(obj, label)
 	if not obj:IsA("Model") or obj.Name ~= "RenderedBrainrot" then return end
-	local root = obj:FindFirstChild("Root", true) or obj:FindFirstChildWhichIsA("BasePart", true)
+	local root = obj:FindFirstChild("Root") or obj:FindFirstChildWhichIsA("BasePart", true)
 	if not root or ESP.markers[obj] then return end
 
 	local hl = Instance.new("Highlight", obj)
@@ -306,7 +405,7 @@ EspCelestialBtn.MouseButton1Click:Connect(function() toggleEsp("Celestial", "Cel
 EspCommonBtn.MouseButton1Click:Connect(function() toggleEsp("Common", "Common", EspCommonBtn) end)
 
 --========================
--- 4. DELETE WALLS
+-- 5. DELETE WALLS
 --========================
 DelWallsBtn.MouseButton1Click:Connect(function()
 	local walls = workspace:FindFirstChild("VIPWalls") or workspace:FindFirstChild("Wallses")
@@ -346,9 +445,15 @@ Close.MouseButton1Click:Connect(function()
 	if pConn then pConn:Disconnect() end
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
-	if fastTakeConn then fastTakeConn:Disconnect() end
+	-- Cleanup Fast Take saat close
+	stopFastTakeListeners()
+	for rendered, _ in pairs(fastTakeCache) do
+		if rendered ~= "_folderConns" then removeFastTake(rendered) end
+	end
+	fastTakeCache = {}
+	-- Cleanup ESP
 	for _, c in pairs(ESP.connections) do if c then c:Disconnect() end end
 	ScreenGui:Destroy()
 end)
 
-print("✅ Dj Hub Loaded with Fast Take!")
+print("✅ Dj Hub Loaded - Enjoy!")
