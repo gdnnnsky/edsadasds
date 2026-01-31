@@ -234,23 +234,28 @@ local function applyFastTake(renderedModel)
 
 	local prompts = {}
 
-	-- Loop semua child model di dalam RenderedBrainrot (misal: "Tim Cheese")
+	-- Loop semua child di dalam RenderedBrainrot (misal: "Lirili Larila")
 	for _, brainrotModel in pairs(renderedModel:GetChildren()) do
 		if brainrotModel:IsA("Model") then
 			local root = brainrotModel:FindFirstChild("Root")
-			if root and root:IsA("BasePart") then
+			if root then
 				local takePrompt = root:FindFirstChild("TakePrompt")
-				if takePrompt and takePrompt:IsA("ProximityPrompt") then
-					-- Simpan nilai original sebelum ubah
-					local origData = {
-						prompt = takePrompt,
-						origHold = takePrompt.HoldDuration,
-						origDist = takePrompt.MaxActivationDistance
-					}
-					-- Terapkan nilai Fast Take
-					takePrompt.HoldDuration = FAST_TAKE_HOLD
-					takePrompt.MaxActivationDistance = FAST_TAKE_DIST
-					table.insert(prompts, origData)
+				if takePrompt then
+					-- Coba baca original dan set baru, pcall biar aman
+					local ok, result = pcall(function()
+						local oh = takePrompt.HoldDuration
+						local od = takePrompt.MaxActivationDistance
+						takePrompt.HoldDuration = FAST_TAKE_HOLD
+						takePrompt.MaxActivationDistance = FAST_TAKE_DIST
+						return { origHold = oh, origDist = od }
+					end)
+					if ok and result then
+						table.insert(prompts, {
+							prompt = takePrompt,
+							origHold = result.origHold,
+							origDist = result.origDist
+						})
+					end
 				end
 			end
 		end
