@@ -1,5 +1,5 @@
 --// Dj Hub (Final Stable Version)
---// Features: Scrollable UI, Stable Platform, Noclip, Multi-ESP, Wall Remover
+--// Features: Scrollable UI, Stable Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -129,15 +129,61 @@ end
 --========================
 -- Feature Buttons
 --========================
-local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
-local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
-local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165, 32), 3)
+local FastTakeBtn    = createButton("Fast Take: OFF", Color3.fromRGB(200, 50, 50), 0)
+local PlatformBtn    = createButton("Platform: OFF", Color3.fromRGB(40, 120, 180), 1)
+local NoclipBtn      = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 2)
+local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165, 32), 3)
 local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 4)
-local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 5)
-local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 6)
+local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 5)
+local DelWallsBtn     = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 6)
 
 --========================
--- 1. PLATFORM LOGIC (STABLE)
+-- 0. FAST TAKE LOGIC
+--========================
+local fastTakeEnabled = false
+local fastTakeConn = nil
+
+local function applyFastTake(obj)
+	-- Mencari path: ActiveBrainrots -> rarity -> RenderedBrainrot -> BrainrotName -> Root -> TakePromt
+	if obj.Name == "RenderedBrainrot" then
+		task.spawn(function()
+			-- Tunggu sampai struktur Root dan TakePromt muncul
+			local prompt = obj:FindFirstChild("TakePromt", true) 
+			if prompt and prompt:IsA("ProximityPrompt") then
+				prompt.HoldDuration = 0
+				prompt.MaxActivationDistance = 15
+			end
+		end)
+	end
+end
+
+FastTakeBtn.MouseButton1Click:Connect(function()
+	fastTakeEnabled = not fastTakeEnabled
+	FastTakeBtn.Text = "Fast Take: " .. (fastTakeEnabled and "ON" or "OFF")
+	FastTakeBtn.BackgroundColor3 = fastTakeEnabled and Color3.fromRGB(50, 200, 50) or Color3.fromRGB(200, 50, 50)
+
+	local folder = workspace:FindFirstChild("ActiveBrainrots")
+	if fastTakeEnabled and folder then
+		-- Apply ke yang sudah ada
+		for _, rarity in pairs(folder:GetChildren()) do
+			for _, item in pairs(rarity:GetChildren()) do
+				applyFastTake(item)
+			end
+		end
+		-- Loop untuk item baru yang muncul
+		fastTakeConn = folder.DescendantAdded:Connect(function(descendant)
+			if descendant.Name == "TakePromt" and descendant:IsA("ProximityPrompt") then
+				descendant.HoldDuration = 0
+				descendant.MaxActivationDistance = 15
+			end
+		end)
+	else
+		if fastTakeConn then fastTakeConn:Disconnect() fastTakeConn = nil end
+	end
+end)
+
+--========================
+-- 1. PLATFORM LOGIC
 --========================
 local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
@@ -215,7 +261,7 @@ end
 
 local function addMarker(obj, label)
 	if not obj:IsA("Model") or obj.Name ~= "RenderedBrainrot" then return end
-	local root = obj:FindFirstChild("Root") or obj:FindFirstChildWhichIsA("BasePart", true)
+	local root = obj:FindFirstChild("Root", true) or obj:FindFirstChildWhichIsA("BasePart", true)
 	if not root or ESP.markers[obj] then return end
 
 	local hl = Instance.new("Highlight", obj)
@@ -300,8 +346,9 @@ Close.MouseButton1Click:Connect(function()
 	if pConn then pConn:Disconnect() end
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
+	if fastTakeConn then fastTakeConn:Disconnect() end
 	for _, c in pairs(ESP.connections) do if c then c:Disconnect() end end
 	ScreenGui:Destroy()
 end)
 
-print("✅ Dj Hub Loaded - Enjoy!")
+print("✅ Dj Hub Loaded with Fast Take!")
