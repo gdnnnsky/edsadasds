@@ -1,4 +1,4 @@
---// Dj Hub (Final Stable Version - Fixed & Integrated)
+--// Dj Hub (Final Stable Version - Fixed)
 --// Features: Scrollable UI, Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
@@ -292,7 +292,7 @@ local function applyFastTake(renderedModel)
 		if subItem:IsA("Model") then
 			local root = subItem:FindFirstChild("Root")
 			if root then
-				local prompt = root:FindFirstChild("TakePromt") or root:FindFirstChildWhichIsA("ProximityPrompt")
+				local prompt = root:FindFirstChild("TakePrompt") or root:FindFirstChildWhichIsA("ProximityPrompt")
 				if prompt then
 					prompt.HoldDuration = 0
 					prompt.MaxActivationDistance = 15
