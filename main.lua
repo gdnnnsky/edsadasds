@@ -1,4 +1,4 @@
---// Dj Hub (Updated): +Divine ESP
+--// Dj Hub (Scrollable + Noclip + Divine)
 --// LocalScript di StarterPlayerScripts / StarterGui
 
 local Players = game:GetService("Players")
@@ -43,9 +43,9 @@ ScreenGui.Parent = parent
 
 local Window = Instance.new("Frame")
 Window.Name = "Window"
--- [UPDATE] Tinggi diperbesar dari 300 ke 350 untuk muat tombol baru
-Window.Size = UDim2.new(0, 420, 0, 350) 
-Window.Position = UDim2.new(0.5, -210, 0.5, -175)
+-- [UPDATE] Ukuran GUI dibuat Compact (Kecil) karena sudah ada Scroll
+Window.Size = UDim2.new(0, 420, 0, 260) 
+Window.Position = UDim2.new(0.5, -210, 0.5, -130)
 Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Window.BorderSizePixel = 0
 Window.Active = true
@@ -55,6 +55,7 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 10)
 UICorner.Parent = Window
 
+-- Header / Topbar
 local Topbar = Instance.new("Frame")
 Topbar.Name = "Topbar"
 Topbar.Size = UDim2.new(1, 0, 0, 38)
@@ -77,20 +78,19 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -120, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Dj Hub - Divine Update"
+Title.Text = "Dj Hub - Scroll & Noclip"
 Title.TextSize = 16
 Title.Font = Enum.Font.GothamSemibold
 Title.TextColor3 = Color3.fromRGB(235, 235, 235)
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Topbar
 
+-- Tombol Close & Minimize
 local Close = Instance.new("TextButton")
 Close.Size = UDim2.new(0, 38, 0, 26)
 Close.Position = UDim2.new(1, -44, 0, 6)
 Close.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-Close.BorderSizePixel = 0
 Close.Text = "X"
-Close.TextSize = 14
 Close.Font = Enum.Font.GothamBold
 Close.TextColor3 = Color3.fromRGB(255, 255, 255)
 Close.Parent = Topbar
@@ -100,142 +100,137 @@ local Minimize = Instance.new("TextButton")
 Minimize.Size = UDim2.new(0, 38, 0, 26)
 Minimize.Position = UDim2.new(1, -88, 0, 6)
 Minimize.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-Minimize.BorderSizePixel = 0
 Minimize.Text = "-"
-Minimize.TextSize = 18
 Minimize.Font = Enum.Font.GothamBold
 Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
 Minimize.Parent = Topbar
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 8)
 
-local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, 0, 1, -38)
-Content.Position = UDim2.new(0, 0, 0, 38)
-Content.BackgroundTransparency = 1
-Content.Parent = Window
+--========================
+-- SCROLLING FRAME SETUP
+--========================
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "ContentFrame"
+ContentFrame.Size = UDim2.new(1, 0, 1, -38)
+ContentFrame.Position = UDim2.new(0, 0, 0, 38)
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Parent = Window
 
+-- Label Judul Menu
 local Info = Instance.new("TextLabel")
-Info.Size = UDim2.new(1, -24, 0, 40)
-Info.Position = UDim2.new(0, 12, 0, 12)
+Info.Size = UDim2.new(1, -24, 0, 30)
+Info.Position = UDim2.new(0, 12, 0, 5)
 Info.BackgroundTransparency = 1
-Info.Text = "Brainrot ESP & Tools"
-Info.TextSize = 14
+Info.Text = "Scroll down for more features"
+Info.TextSize = 12
 Info.Font = Enum.Font.Gotham
-Info.TextColor3 = Color3.fromRGB(200, 200, 200)
+Info.TextColor3 = Color3.fromRGB(150, 150, 150)
 Info.TextXAlignment = Enum.TextXAlignment.Left
-Info.Parent = Content
+Info.Parent = ContentFrame
 
--- Button 1: Celestial
-local EspCelestialBtn = Instance.new("TextButton")
-EspCelestialBtn.Size = UDim2.new(0, 180, 0, 34)
-EspCelestialBtn.Position = UDim2.new(0, 12, 0, 50)
-EspCelestialBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-EspCelestialBtn.BorderSizePixel = 0
-EspCelestialBtn.Text = "ESP Celestial: OFF"
-EspCelestialBtn.TextSize = 14
-EspCelestialBtn.Font = Enum.Font.GothamSemibold
-EspCelestialBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspCelestialBtn.Parent = Content
-Instance.new("UICorner", EspCelestialBtn).CornerRadius = UDim.new(0, 8)
+-- Container Scroll
+local ScrollContainer = Instance.new("ScrollingFrame")
+ScrollContainer.Name = "ScrollContainer"
+ScrollContainer.Size = UDim2.new(1, -10, 1, -40) -- Full size minus padding
+ScrollContainer.Position = UDim2.new(0, 5, 0, 35)
+ScrollContainer.BackgroundTransparency = 1
+ScrollContainer.BorderSizePixel = 0
+ScrollContainer.ScrollBarThickness = 6
+ScrollContainer.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+ScrollContainer.CanvasSize = UDim2.new(0, 0, 0, 0) -- Akan otomatis dihitung
+ScrollContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Fitur penting agar auto-expand
+ScrollContainer.Parent = ContentFrame
 
--- Button 2: Common
-local EspCommonBtn = Instance.new("TextButton")
-EspCommonBtn.Size = UDim2.new(0, 180, 0, 34)
-EspCommonBtn.Position = UDim2.new(0, 12, 0, 94)
-EspCommonBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-EspCommonBtn.BorderSizePixel = 0
-EspCommonBtn.Text = "ESP Common: OFF"
-EspCommonBtn.TextSize = 14
-EspCommonBtn.Font = Enum.Font.GothamSemibold
-EspCommonBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspCommonBtn.Parent = Content
-Instance.new("UICorner", EspCommonBtn).CornerRadius = UDim.new(0, 8)
+-- Layout List (Agar tombol otomatis rapi ke bawah)
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollContainer
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8) -- Jarak antar tombol
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
--- Button 3: Divine (NEW)
-local EspDivineBtn = Instance.new("TextButton")
-EspDivineBtn.Size = UDim2.new(0, 180, 0, 34)
-EspDivineBtn.Position = UDim2.new(0, 12, 0, 138) -- Posisi baru di bawah Common
-EspDivineBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-EspDivineBtn.BorderSizePixel = 0
-EspDivineBtn.Text = "ESP Divine: OFF"
-EspDivineBtn.TextSize = 14
-EspDivineBtn.Font = Enum.Font.GothamSemibold
-EspDivineBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-EspDivineBtn.Parent = Content
-Instance.new("UICorner", EspDivineBtn).CornerRadius = UDim.new(0, 8)
-
--- Button 4: Delete Walls (Digeser ke bawah)
-local DelWallsBtn = Instance.new("TextButton")
-DelWallsBtn.Size = UDim2.new(0, 180, 0, 34)
-DelWallsBtn.Position = UDim2.new(0, 12, 0, 182) -- Digeser ke 182
-DelWallsBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 40)
-DelWallsBtn.BorderSizePixel = 0
-DelWallsBtn.Text = "Delete Walls (Safe)"
-DelWallsBtn.TextSize = 14
-DelWallsBtn.Font = Enum.Font.GothamSemibold
-DelWallsBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DelWallsBtn.Parent = Content
-Instance.new("UICorner", DelWallsBtn).CornerRadius = UDim.new(0, 8)
-
+-- Padding agar tidak nempel pinggir
+local UIPadding = Instance.new("UIPadding")
+UIPadding.PaddingTop = UDim.new(0, 5)
+UIPadding.PaddingBottom = UDim.new(0, 5)
+UIPadding.Parent = ScrollContainer
 
 --========================
--- Drag logic
+-- Helper Function: Create Button
 --========================
-local dragging = false
-local dragStart, startPos
-
-local function updateDrag(input)
-	local delta = input.Position - dragStart
-	Window.Position = UDim2.new(
-		startPos.X.Scale, startPos.X.Offset + delta.X,
-		startPos.Y.Scale, startPos.Y.Offset + delta.Y
-	)
+-- Fungsi ini biar kita gak capek ngetik ulang settingan tombol
+local function createButton(text, color, order)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 380, 0, 40) -- Lebar tombol mengikuti scroll container
+	btn.BackgroundColor3 = color or Color3.fromRGB(70, 70, 70)
+	btn.Text = text
+	btn.TextSize = 14
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.LayoutOrder = order or 0
+	btn.Parent = ScrollContainer
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 8)
+	corner.Parent = btn
+	
+	return btn
 end
 
-Topbar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = Window.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
+--========================
+-- BUTTONS CREATION
+--========================
+
+-- 1. Noclip (FITUR BARU)
+local NoclipBtn = createButton("Noclip: OFF", Color3.fromRGB(100, 50, 150), 1)
+
+-- 2. ESP Buttons
+local EspCelestialBtn = createButton("ESP Celestial: OFF", nil, 2)
+local EspCommonBtn    = createButton("ESP Common: OFF", nil, 3)
+local EspDivineBtn    = createButton("ESP Divine: OFF", nil, 4)
+
+-- 3. Delete Walls
+local DelWallsBtn = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 5)
+
+--========================
+-- LOGIC & FEATURES
+--========================
+
+-- 1. NOCLIP LOGIC
+local noclipOn = false
+local noclipConnection = nil
+
+local function toggleNoclip()
+	noclipOn = not noclipOn
+	
+	if noclipOn then
+		NoclipBtn.Text = "Noclip: ON"
+		NoclipBtn.BackgroundColor3 = Color3.fromRGB(140, 70, 200)
+		
+		-- Loop RunService
+		noclipConnection = RunService.Stepped:Connect(function()
+			if lp.Character then
+				for _, part in pairs(lp.Character:GetDescendants()) do
+					if part:IsA("BasePart") and part.CanCollide == true then
+						part.CanCollide = false
+					end
+				end
 			end
 		end)
-	end
-end)
-
-UIS.InputChanged:Connect(function(input)
-	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-		updateDrag(input)
-	end
-end)
-
---========================
--- Minimize
---========================
-local minimized = false
-local normalSize = Window.Size
-local minimizedSize = UDim2.new(0, 420, 0, 38)
-
-Minimize.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	if minimized then
-		Content.Visible = false
-		Window.Size = minimizedSize
-		Minimize.Text = "+"
 	else
-		Content.Visible = true
-		Window.Size = normalSize
-		Minimize.Text = "-"
+		NoclipBtn.Text = "Noclip: OFF"
+		NoclipBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
+		
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
 	end
-end)
+end
 
---========================
--- ESP Engine
---========================
+NoclipBtn.MouseButton1Click:Connect(toggleNoclip)
+
+-- 2. ESP LOGIC (Updated with Divine)
 local ESP = {
-	-- [UPDATE] Menambahkan Divine ke table
 	enabled = { Celestial = false, Common = false, Divine = false },
 	connections = { Celestial = nil, Common = nil, Divine = nil },
 	markers = {}
@@ -271,15 +266,20 @@ local function addMarker(rendered, labelPrefix)
 
 	local hl = Instance.new("Highlight")
 	hl.Name = "DjESP_HL"
-	hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 	hl.Adornee = rendered
 	hl.Parent = rendered
-    
-    -- Opsional: Warna beda untuk setiap tipe (bisa disesuaikan)
-    if labelPrefix == "Divine" then
-        hl.FillColor = Color3.fromRGB(255, 215, 0) -- Emas untuk Divine
-        hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-    end
+	hl.FillTransparency = 0.5
+	hl.OutlineTransparency = 0
+
+	-- Custom Colors
+	if labelPrefix == "Divine" then
+		hl.FillColor = Color3.fromRGB(255, 215, 0) -- Gold
+		hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+	elseif labelPrefix == "Celestial" then
+		hl.FillColor = Color3.fromRGB(0, 255, 255) -- Cyan
+	else
+		hl.FillColor = Color3.fromRGB(255, 0, 0) -- Red default
+	end
 
 	local bb = Instance.new("BillboardGui")
 	bb.Name = "DjESP_BB"
@@ -297,9 +297,7 @@ local function addMarker(rendered, labelPrefix)
 	txt.TextColor3 = Color3.fromRGB(255, 255, 255)
 	txt.TextStrokeTransparency = 0.6
 	txt.Text = ("%s: %s"):format(labelPrefix, modelName)
-	if labelPrefix == "Divine" then
-		txt.TextColor3 = Color3.fromRGB(255, 220, 50) -- Text Emas untuk Divine
-	end
+	if labelPrefix == "Divine" then txt.TextColor3 = Color3.fromRGB(255, 220, 50) end
 	txt.Parent = bb
 
 	local ac = rendered.AncestryChanged:Connect(function(_, parentNow)
@@ -321,59 +319,47 @@ local function scanFolder(folder, labelPrefix)
 	end
 end
 
-local function setEsp(modeName, folderName, labelPrefix, isOn)
+local function setEsp(modeName, folderName, labelPrefix, isOn, btn)
 	ESP.enabled[modeName] = isOn
 	if ESP.connections[modeName] then
 		ESP.connections[modeName]:Disconnect()
 		ESP.connections[modeName] = nil
 	end
+	
+	-- Update Button Visual
+	btn.Text = "ESP " .. labelPrefix .. ": " .. (isOn and "ON" or "OFF")
+	btn.BackgroundColor3 = isOn and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+
 	local folder = getFolder(folderName)
-	if not folder then
-		if isOn then warn("Folder ESP not found: " .. folderName) end
-		return
-	end
+	if not folder then return end
+	
 	if not isOn then
 		for rendered, _ in pairs(ESP.markers) do
 			if rendered:IsDescendantOf(folder) then removeMarker(rendered) end
 		end
 		return
 	end
+	
 	scanFolder(folder, labelPrefix)
 	ESP.connections[modeName] = folder.ChildAdded:Connect(function(child)
 		addMarker(child, labelPrefix)
 	end)
 end
 
---========================
--- Button Hooks: ESP
---========================
 EspCelestialBtn.MouseButton1Click:Connect(function()
-	local newState = not ESP.enabled.Celestial
-	setEsp("Celestial", "Celestial", "Celestial", newState)
-	EspCelestialBtn.Text = "ESP Celestial: " .. (newState and "ON" or "OFF")
-	EspCelestialBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+	setEsp("Celestial", "Celestial", "Celestial", not ESP.enabled.Celestial, EspCelestialBtn)
 end)
 
 EspCommonBtn.MouseButton1Click:Connect(function()
-	local newState = not ESP.enabled.Common
-	setEsp("Common", "Common", "Common", newState)
-	EspCommonBtn.Text = "ESP Common: " .. (newState and "ON" or "OFF")
-	EspCommonBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+	setEsp("Common", "Common", "Common", not ESP.enabled.Common, EspCommonBtn)
 end)
 
--- [UPDATE] Button Hook: DIVINE
 EspDivineBtn.MouseButton1Click:Connect(function()
-	local newState = not ESP.enabled.Divine
-	setEsp("Divine", "Divine", "Divine", newState)
-	EspDivineBtn.Text = "ESP Divine: " .. (newState and "ON" or "OFF")
-	EspDivineBtn.BackgroundColor3 = newState and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
+	setEsp("Divine", "Divine", "Divine", not ESP.enabled.Divine, EspDivineBtn)
 end)
 
---========================
--- Button Hook: DELETE WALLS
---========================
+-- 3. DELETE WALLS LOGIC
 local wallsDeleted = false
-
 DelWallsBtn.MouseButton1Click:Connect(function()
 	if wallsDeleted then
 		DelWallsBtn.Text = "Already Deleted!"
@@ -381,9 +367,7 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 		DelWallsBtn.Text = "Walls Deleted (Rejoin to fix)"
 		return
 	end
-
 	local wallModel = workspace:FindFirstChild("VIPWalls")
-	
 	if wallModel then
 		local count = 0
 		for _, child in ipairs(wallModel:GetChildren()) do
@@ -392,31 +376,62 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 				count = count + 1
 			end
 		end
-		
-		if count > 0 then
-			wallsDeleted = true
-			DelWallsBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-			DelWallsBtn.Text = "Deleted " .. count .. " blocks!"
-		else
-			DelWallsBtn.Text = "No blocks found inside Wallses"
-		end
+		wallsDeleted = true
+		DelWallsBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+		DelWallsBtn.Text = "Deleted " .. count .. " blocks!"
 	else
 		DelWallsBtn.Text = "Model 'VIPWalls' not found!"
-	end
-	
-	if not wallsDeleted then
-		wait(2)
-		DelWallsBtn.Text = "Delete Walls (Safe)"
 	end
 end)
 
 --========================
--- Close cleanup
+-- GUI DRAGGING
 --========================
+local dragging, dragStart, startPos
+Topbar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Window.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+UIS.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		Window.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+--========================
+-- CLEANUP
+--========================
+local minimized = false
+local normalSize = Window.Size
+local minimizedSize = UDim2.new(0, 420, 0, 38)
+
+Minimize.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		ContentFrame.Visible = false
+		Window.Size = minimizedSize
+		Minimize.Text = "+"
+	else
+		ContentFrame.Visible = true
+		Window.Size = normalSize
+		Minimize.Text = "-"
+	end
+end)
+
 Close.MouseButton1Click:Connect(function()
+	-- Matikan Noclip loop jika ada
+	if noclipConnection then noclipConnection:Disconnect() end
+	-- Matikan ESP loop
 	for _, conn in pairs(ESP.connections) do if conn then conn:Disconnect() end end
 	for rendered, _ in pairs(ESP.markers) do removeMarker(rendered) end
 	ScreenGui:Destroy()
 end)
 
-print("✅ GUI Updated with Divine ESP & Wall Remover.")
+print("✅ GUI Updated: Scrollable + Noclip + Divine.")
