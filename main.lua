@@ -1,18 +1,11 @@
-jenganjenggggg
-
--- Menunggu sampai game benar-benar siap
-if not game:IsLoaded() then game.Loaded:Wait() end
+--// Dj Hub (Final Stable Version - Fixed & Integrated)
+--// Features: Scrollable UI, Platform, Noclip, Multi-ESP, Wall Remover, Fast Take
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- Menunggu LocalPlayer
 local lp = Players.LocalPlayer
-while not lp do
-    task.wait(0.1)
-    lp = Players.LocalPlayer
-end
 
 --========================
 -- GUI Parent Setup
@@ -24,14 +17,12 @@ local function pickGuiParent()
 	end
 	local ok, core = pcall(function() return game:GetService("CoreGui") end)
 	if ok and core then return core end
-    warn("Dj Hub: Gagal menemukan GUI Parent!") -- Notifikasi jika gagal
 	return nil
 end
 
 local parent = pickGuiParent()
 if not parent then return end
 
--- Hapus GUI lama jika ada
 pcall(function()
 	local old = parent:FindFirstChild("DjWindowGUI")
 	if old then old:Destroy() end
@@ -49,7 +40,7 @@ local Window = Instance.new("Frame")
 Window.Name = "Window"
 Window.Size = UDim2.new(0, 420, 0, 260) 
 Window.Position = UDim2.new(0.5, -210, 0.5, -130)
-Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- Gabungan Source 1 & 2 [cite: 1, 2]
+Window.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Window.BorderSizePixel = 0
 Window.Active = true
 Window.Parent = ScreenGui
@@ -85,7 +76,7 @@ Close.TextColor3 = Color3.fromRGB(255, 255, 255)
 Close.Parent = Topbar
 Instance.new("UICorner", Close).CornerRadius = UDim.new(0, 8)
 
-local Minimize = Instance.new("TextButton") -- [cite: 3]
+local Minimize = Instance.new("TextButton")
 Minimize.Size = UDim2.new(0, 38, 0, 26)
 Minimize.Position = UDim2.new(1, -88, 0, 6)
 Minimize.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
@@ -95,7 +86,9 @@ Minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
 Minimize.Parent = Topbar
 Instance.new("UICorner", Minimize).CornerRadius = UDim.new(0, 8)
 
+--========================
 -- Scrolling Container
+--========================
 local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, 0, 1, -38)
 ContentFrame.Position = UDim2.new(0, 0, 0, 38)
@@ -121,7 +114,7 @@ Instance.new("UIPadding", Scroll).PaddingTop = UDim.new(0, 5)
 -- Helper Button Function
 local function createButton(text, color, order)
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 380, 0, 40) -- [cite: 4]
+	btn.Size = UDim2.new(0, 380, 0, 40)
 	btn.BackgroundColor3 = color or Color3.fromRGB(70, 70, 70)
 	btn.Text = text
 	btn.Font = Enum.Font.GothamSemibold
@@ -142,10 +135,10 @@ local EspDivineBtn    = createButton("ESP Divine: OFF", Color3.fromRGB(218, 165,
 local EspCelestialBtn = createButton("ESP Celestial: OFF", Color3.fromRGB(70, 130, 180), 4)
 local EspCommonBtn    = createButton("ESP Common: OFF", Color3.fromRGB(100, 100, 100), 5)
 local DelWallsBtn      = createButton("Delete Walls (Safe)", Color3.fromRGB(180, 100, 40), 6)
-local FastTakeBtn     = createButton("Fast Take: OFF", Color3.fromRGB(200, 150, 50), 7)
+local FastTakeBtn     = createButton("Fast Take: OFF", Color3.fromRGB(46, 204, 113), 7) -- Tombol baru
 
 --========================
--- 1. PLATFORM LOGIC (STABLE) [cite: 5]
+-- 1. PLATFORM LOGIC
 --========================
 local platformEnabled = false
 local pPart, pConn, lastY = nil, nil, 0
@@ -180,7 +173,7 @@ PlatformBtn.MouseButton1Click:Connect(function()
 		end)
 	else
 		if pConn then pConn:Disconnect() pConn = nil end
-		if pPart then pPart:Destroy() pPart = nil end -- [cite: 6]
+		if pPart then pPart:Destroy() pPart = nil end
 	end
 end)
 
@@ -222,7 +215,7 @@ local function removeMarker(obj)
 end
 
 local function addMarker(obj, label)
-	if not obj:IsA("Model") or obj.Name ~= "RenderedBrainrot" then return end -- [cite: 7]
+	if not obj:IsA("Model") or obj.Name ~= "RenderedBrainrot" then return end
 	local root = obj:FindFirstChild("Root") or obj:FindFirstChildWhichIsA("BasePart", true)
 	if not root or ESP.markers[obj] then return end
 
@@ -249,12 +242,12 @@ end
 local function toggleEsp(mode, folderName, btn)
 	ESP.enabled[mode] = not ESP.enabled[mode]
 	local isOn = ESP.enabled[mode]
-	btn.Text = "ESP "..mode..": "..(isOn and "ON" or "OFF") -- [cite: 8]
+	btn.Text = "ESP "..mode..": "..(isOn and "ON" or "OFF")
 	btn.BackgroundColor3 = isOn and Color3.fromRGB(50, 140, 90) or Color3.fromRGB(70, 70, 70)
 
 	if ESP.connections[mode] then ESP.connections[mode]:Disconnect() end
-	local abFolder = workspace:FindFirstChild("ActiveBrainrots")
-	local folder = abFolder and abFolder:FindFirstChild(folderName)
+	local ab = workspace:FindFirstChild("ActiveBrainrots")
+	local folder = ab and ab:FindFirstChild(folderName)
 	
 	if isOn and folder then
 		for _, v in pairs(folder:GetChildren()) do addMarker(v, mode) end
@@ -287,17 +280,17 @@ DelWallsBtn.MouseButton1Click:Connect(function()
 end)
 
 --========================
--- 5. FAST TAKE LOGIC
+-- 5. FAST TAKE LOGIC (NEW)
 --========================
-local fastTakeEnabled = false
-local fastTakeConnections = {}
+local fastTakeActive = false
+local fastTakeConns = {}
 
-local function processTakePrompt(renderedBrainrot)
-	if not renderedBrainrot:IsA("Model") then return end
-	-- Masuk ke model spesifik di dalam RenderedBrainrot (misal: Tim Cheese)
-	for _, itemModel in pairs(renderedBrainrot:GetChildren()) do
-		if itemModel:IsA("Model") then
-			local root = itemModel:FindFirstChild("Root")
+local function applyFastTake(renderedModel)
+	if not renderedModel:IsA("Model") then return end
+	-- Struktur: RenderedBrainrot -> [Model Brainrot] -> Root -> TakePromt
+	for _, subItem in pairs(renderedModel:GetChildren()) do
+		if subItem:IsA("Model") then
+			local root = subItem:FindFirstChild("Root")
 			if root then
 				local prompt = root:FindFirstChild("TakePromt") or root:FindFirstChildWhichIsA("ProximityPrompt")
 				if prompt then
@@ -310,31 +303,31 @@ local function processTakePrompt(renderedBrainrot)
 end
 
 FastTakeBtn.MouseButton1Click:Connect(function()
-	fastTakeEnabled = not fastTakeEnabled
-	FastTakeBtn.Text = "Fast Take: " .. (fastTakeEnabled and "ON" or "OFF")
-	FastTakeBtn.BackgroundColor3 = fastTakeEnabled and Color3.fromRGB(46, 204, 113) or Color3.fromRGB(200, 150, 50)
+	fastTakeActive = not fastTakeActive
+	FastTakeBtn.Text = "Fast Take: " .. (fastTakeActive and "ON" or "OFF")
+	FastTakeBtn.BackgroundColor3 = fastTakeActive and Color3.fromRGB(39, 174, 96) or Color3.fromRGB(46, 204, 113)
 
 	local ab = workspace:FindFirstChild("ActiveBrainrots")
 	if not ab then return end
 
-	if fastTakeEnabled then
-		for _, category in pairs(ab:GetChildren()) do
-			if category:IsA("Folder") then
-				-- Terapkan ke yang sudah ada
-				for _, rb in pairs(category:GetChildren()) do
-					processTakePrompt(rb)
+	if fastTakeActive then
+		for _, folder in pairs(ab:GetChildren()) do
+			if folder:IsA("Folder") then
+				-- Scan yang sudah ada
+				for _, rb in pairs(folder:GetChildren()) do
+					if rb.Name == "RenderedBrainrot" then applyFastTake(rb) end
 				end
-				-- Monitor item baru yang muncul
-				fastTakeConnections[category.Name] = category.ChildAdded:Connect(function(child)
+				-- Pantau yang akan muncul
+				fastTakeConns[folder.Name] = folder.ChildAdded:Connect(function(child)
 					task.wait(0.2)
-					processTakePrompt(child)
+					if child.Name == "RenderedBrainrot" then applyFastTake(child) end
 				end)
 			end
 		end
 	else
-		-- Matikan monitor
-		for _, conn in pairs(fastTakeConnections) do conn:Disconnect() end
-		fastTakeConnections = {}
+		-- Matikan koneksi
+		for _, conn in pairs(fastTakeConns) do conn:Disconnect() end
+		fastTakeConns = {}
 	end
 end)
 
@@ -343,7 +336,7 @@ end)
 --========================
 local dragging, dragStart, startPos
 Topbar.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then -- [cite: 9]
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true dragStart = input.Position startPos = Window.Position
 		input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
 	end
@@ -366,8 +359,8 @@ Close.MouseButton1Click:Connect(function()
 	if pPart then pPart:Destroy() end
 	if noclipConn then noclipConn:Disconnect() end
 	for _, c in pairs(ESP.connections) do if c then c:Disconnect() end end
-	for _, c in pairs(fastTakeConnections) do if c then c:Disconnect() end end
+	for _, c in pairs(fastTakeConns) do if c then c:Disconnect() end end
 	ScreenGui:Destroy()
 end)
 
-print("✅ Dj Hub Loaded Successfully!")
+print("✅ Dj Hub Loaded - Fast Take Integrated!")
