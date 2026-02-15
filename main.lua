@@ -1,5 +1,5 @@
 --// Dj Hub (Ultimate Version - Lag Reducer Added)
---// Featurdsfsdfsrefdses: Realtime Follow + Smart Auto Equip + Arcade ESP + Reduce Lag + Valentine Event
+--// pelerrrrs: Realtime Follow + Smart Auto Equip + Arcade ESP + Reduce Lag + Valentine Event
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
