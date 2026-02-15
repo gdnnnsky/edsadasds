@@ -1,4 +1,3 @@
-script
 --// Dj Hub Remastered (Fix Menu Not Showing Version)
 --// Status: PATCHED & FIXED
 --// Log: Added Wait for PlayerGui, Fixed Valentine Auto Collect Logic
