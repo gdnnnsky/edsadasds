@@ -1,5 +1,6 @@
---// Dj Hub (Ultimate Version - Valentine Added)
---// Features: Realtime Follow + Smart Auto Equip + Reduce Lag+ + Valentine Auto Collect
+script
+--// Dj Hub (Ultimate Version - Lag Reducer Added)
+--// Features: Realtime Follow + Smart Auto Equip + Arcade ESP + Reduce Lag + Valentine Event
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -92,10 +93,10 @@ end
 -- 4. Main Window Construction
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 450, 0, 450) -- Diperpanjang sedikit
-MainFrame.Position = UDim2.new(0.5, -225, 0.5, -225)
+MainFrame.Size = UDim2.new(0, 450, 0, 420) -- Diperpanjang untuk section baru
+MainFrame.Position = UDim2.new(0.5, -225, 0.5, -210)
 MainFrame.BackgroundColor3 = colors.background
-MainFrame.BackgroundTransparency = 0.15 
+MainFrame.BackgroundTransparency = 0.15 
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
@@ -307,7 +308,7 @@ local fastTakeEnabled = false
 local ftConnection = nil
 local autoConsoleEnabled = false
 local autoTicketEnabled = false
-local autoValentineEnabled = false -- New Variable
+local autoValentineEnabled = false -- NEW VARIABLE
 local notifConfig = { Divine = false, Celestial = false, Common = false }
 local notifListeners = {}
 
@@ -335,9 +336,9 @@ end
 local function removeMarker(obj)
 	local data = ESP.markers[obj]
 	if data then
-		pcall(function() 
-			data.hl:Destroy() 
-			data.bb:Destroy() 
+		pcall(function() 
+			data.hl:Destroy() 
+			data.bb:Destroy() 
 			data.ac:Disconnect()
 			if data.tc then data.tc:Disconnect() end
 		end)
@@ -405,9 +406,9 @@ local function addMarker(obj, label)
 		timerConnection = timerLabel:GetPropertyChangedSignal("Text"):Connect(updateEspText)
 	end
 
-	ESP.markers[obj] = { 
-		hl = hl, 
-		bb = bb, 
+	ESP.markers[obj] = { 
+		hl = hl, 
+		bb = bb, 
 		ac = obj.AncestryChanged:Connect(function() if not obj.Parent then removeMarker(obj) end end),
 		tc = timerConnection
 	}
@@ -471,8 +472,8 @@ local function toggleItemEsp(mode, folderName)
 		for _, v in pairs(folder:GetChildren()) do addItemMarker(v, mode) end
 		ESP.connections[mode] = folder.ChildAdded:Connect(function(c) addItemMarker(c, mode) end)
 	else
-		for obj, _ in pairs(ESP.markers) do 
-			if obj:IsDescendantOf(folder) then removeMarker(obj) end 
+		for obj, _ in pairs(ESP.markers) do 
+			if obj:IsDescendantOf(folder) then removeMarker(obj) end 
 		end
 	end
 end
@@ -519,7 +520,7 @@ end
 -- 4. Auto Equip Logic
 task.spawn(function()
 	while true do
-		task.wait(0.2) 
+		task.wait(0.2) 
 		if autoEquipEnabled and lp.Character and lp.Backpack then
 			local humanoid = lp.Character:FindFirstChild("Humanoid")
 			if humanoid then
@@ -658,7 +659,7 @@ CreateButton("Reduce Lag+ (Delete Maps)", function()
 	-- Delete Workspace Targets
 	for _, name in pairs(targets) do
 		local obj = workspace:FindFirstChild(name)
-		if obj then 
+		if obj then 
 			pcall(function() obj:Destroy() end)
 		end
 	end
@@ -806,46 +807,52 @@ CreateToggle("Auto Collect Valentine", function()
 	if autoValentineEnabled then
 		task.spawn(function()
 			while autoValentineEnabled do
-				task.wait(0.1) -- Slightly faster than tickets
-				local hrp = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
-				if hrp then
-					-- Logic for Candy (Candy1-Candy5 in CandyEventParts)
-					local candyFolder = workspace:FindFirstChild("CandyEventParts")
-					if candyFolder then
-						for _, v in pairs(candyFolder:GetChildren()) do
-							-- Matches "Candy1", "Candy2", etc.
-							if string.match(v.Name, "Candy") then
-								local part = v:FindFirstChildWhichIsA("BasePart")
-								if part then
-									if firetouchinterest then
-										firetouchinterest(hrp, part, 0)
-										firetouchinterest(hrp, part, 1)
-									else
-										part.CFrame = hrp.CFrame
+				task.wait() -- Fast wait for collection
+				pcall(function()
+					if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
+						local hrp = lp.Character.HumanoidRootPart
+						
+						-- Target Candies Map
+						local candies = {["Candy1"]=true, ["Candy2"]=true, ["Candy3"]=true, ["Candy4"]=true, ["Candy5"]=true}
+						
+						-- 1. Collect from CandyEventParts
+						local candyFolder = workspace:FindFirstChild("CandyEventParts")
+						if candyFolder then
+							for _, model in pairs(candyFolder:GetChildren()) do
+								if candies[model.Name] then
+									-- Try to find the inner part usually named same as model
+									local part = model:FindFirstChild(model.Name) or model:FindFirstChildWhichIsA("BasePart")
+									if part then
+										if firetouchinterest then
+											firetouchinterest(hrp, part, 0)
+											firetouchinterest(hrp, part, 1)
+										else
+											part.CFrame = hrp.CFrame
+										end
+									end
+								end
+							end
+						end
+						
+						-- 2. Collect from ValentinesCoinParts
+						local coinFolder = workspace:FindFirstChild("ValentinesCoinParts")
+						if coinFolder then
+							for _, model in pairs(coinFolder:GetChildren()) do
+								if model.Name == "ValentinesCoin" then
+									local part = model:FindFirstChild("ValentinesCoin") or model:FindFirstChildWhichIsA("BasePart")
+									if part then
+										if firetouchinterest then
+											firetouchinterest(hrp, part, 0)
+											firetouchinterest(hrp, part, 1)
+										else
+											part.CFrame = hrp.CFrame
+										end
 									end
 								end
 							end
 						end
 					end
-
-					-- Logic for ValentinesCoin (in ValentinesCoinParts)
-					local coinFolder = workspace:FindFirstChild("ValentinesCoinParts")
-					if coinFolder then
-						for _, v in pairs(coinFolder:GetChildren()) do
-							if v.Name == "ValentinesCoin" then
-								local part = v:FindFirstChildWhichIsA("BasePart")
-								if part then
-									if firetouchinterest then
-										firetouchinterest(hrp, part, 0)
-										firetouchinterest(hrp, part, 1)
-									else
-										part.CFrame = hrp.CFrame
-									end
-								end
-							end
-						end
-					end
-				end
+				end)
 			end
 		end)
 	end
@@ -872,4 +879,4 @@ CreateButton("Delete Safe Walls", function()
 	if walls then for _, v in pairs(walls:GetChildren()) do v:Destroy() end end
 end)
 
-print("✅ Dj Hub Remastered (Valentine Added) Loaded")
+print("✅ Dj Hub Remastered (Full Features + Valentine) Loaded")
