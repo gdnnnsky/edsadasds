@@ -1,5 +1,7 @@
---// Dj Hub (Ultimate Version - Lag Reducer Added)
---// pelerrrrs: Realtime Follow + Smart Auto Equip + Arcade ESP + Reduce Lag + Valentine Event
+script
+--// Dj Hub Remastered (Fix Menu Not Showing Version)
+--// Status: PATCHED & FIXED
+--// Log: Added Wait for PlayerGui, Fixed Valentine Auto Collect Logic
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -9,7 +11,22 @@ local StarterGui = game:GetService("StarterGui")
 local SoundService = game:GetService("SoundService")
 local Lighting = game:GetService("Lighting")
 
+-- WAITING FOR GAME LOAD (PENTING AGAR MENU MUNCUL)
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
 local lp = Players.LocalPlayer
+-- Tunggu sampai player benar-benar siap
+local waitCount = 0
+while not lp do
+    task.wait(0.5)
+    lp = Players.LocalPlayer
+    waitCount = waitCount + 1
+    if waitCount > 10 then break end
+end
+
+print("🟢 [Dj Hub] Game Loaded, preparing UI...")
 
 --=============================================================================
 --// GUI LIBRARY & SETUP
@@ -24,19 +41,29 @@ local colors = {
 	toggleOff = Color3.fromRGB(60, 60, 60)
 }
 
--- 1. Setup Parent
+-- 1. Setup Parent (FIXED)
 local function pickGuiParent()
-	if lp then
-		local pg = lp:FindFirstChildOfClass("PlayerGui")
-		if pg then return pg end
-	end
-	local ok, core = pcall(function() return game:GetService("CoreGui") end)
-	if ok and core then return core end
-	return nil
+    -- Coba cari PlayerGui dengan loop safe
+    local attempts = 0
+    while attempts < 20 do
+        if lp:FindFirstChild("PlayerGui") then
+            return lp.PlayerGui
+        end
+        attempts = attempts + 1
+        task.wait(0.2)
+    end
+    
+    -- Fallback ke CoreGui jika PlayerGui gagal
+    local ok, core = pcall(function() return game:GetService("CoreGui") end)
+    if ok and core then return core end
+    return nil
 end
 
 local parent = pickGuiParent()
-if not parent then return end
+if not parent then 
+    warn("🔴 [Dj Hub] Gagal menemukan GUI Parent (PlayerGui/CoreGui)!")
+    return 
+end
 
 -- Cleanup Old GUI
 pcall(function()
@@ -92,7 +119,7 @@ end
 -- 4. Main Window Construction
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 450, 0, 420) -- Diperpanjang untuk section baru
+MainFrame.Size = UDim2.new(0, 450, 0, 420)
 MainFrame.Position = UDim2.new(0.5, -225, 0.5, -210)
 MainFrame.BackgroundColor3 = colors.background
 MainFrame.BackgroundTransparency = 0.15 
@@ -806,12 +833,12 @@ CreateToggle("Auto Collect Valentine", function()
 	if autoValentineEnabled then
 		task.spawn(function()
 			while autoValentineEnabled do
-				task.wait() -- Fast wait for collection
+				task.wait(0.1) -- Safe wait
 				pcall(function()
 					if lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") then
 						local hrp = lp.Character.HumanoidRootPart
 						
-						-- Target Candies Map
+						-- Target Candies Map (Candy1 - Candy5)
 						local candies = {["Candy1"]=true, ["Candy2"]=true, ["Candy3"]=true, ["Candy4"]=true, ["Candy5"]=true}
 						
 						-- 1. Collect from CandyEventParts
@@ -878,4 +905,4 @@ CreateButton("Delete Safe Walls", function()
 	if walls then for _, v in pairs(walls:GetChildren()) do v:Destroy() end end
 end)
 
-print("✅ Dj Hub Remastered (Full Features + Valentine) Loaded")
+print("✅ Dj Hub Remastered (Full Features + Valentine) Loaded Successfully!")
